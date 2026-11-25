@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Ludo Control</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      text-align: center;
+      background: #0d1117;
+      color: #fff;
+      margin: 0;
+      padding: 16px 10px;
+    }
+    h2 { margin: 4px 0 6px; font-size: 22px; color: #ffd43b; }
+    #conn {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #93c5fd;
+    }
+    .row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 0 auto 12px;
+      max-width: 340px;
+    }
+    input, select {
+      background: #161b22;
+      color: #fff;
+      border: 1.5px solid #30363d;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 15px;
+      font-weight: 700;
+      outline: none;
+    }
+    input { flex: 1; min-width: 0; }
+    input:focus, select:focus { border-color: #ffd43b; }
+    #s {
+      margin: 10px auto 14px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #93c5fd;
+      min-height: 26px;
+    }
+    #b {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-width: 330px;
+      margin: 0 auto 14px;
+    }
+    #b button {
+      height: 86px;
+      font-size: 38px;
+      font-weight: 900;
+      border-radius: 16px;
+      border: 0;
+      background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%);
+      color: #0f172a;
+      box-shadow: 0 5px 0 #64748b;
+      cursor: pointer;
+    }
+    #b button:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #64748b;
+    }
+    .clr-btn {
+      width: 100%;
+      max-width: 330px;
+      height: 54px;
+      font-size: 18px;
+      font-weight: 800;
+      border-radius: 14px;
+      border: 0;
+      background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
+      color: #fff;
+      box-shadow: 0 4px 0 #7f1d1d;
+      cursor: pointer;
+    }
+    .clr-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 #7f1d1d;
+    }
+    .hint {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #8b949e;
+      max-width: 330px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <h2>পরের রোল কত হবে?</h2>
+  <div id="conn">🔄 Firebase চেক হচ্ছে...</div>
+
+  <div class="row">
+    <input id="roomInput" type="text" maxlength="6" placeholder="Room # (খালি = সব রুম)" />
+    <select id="colorInput">
+      <option value="">All</option>
+      <option value="blue">Blue</option>
+      <option value="red">Red</option>
+      <option value="green">Green</option>
+      <option value="yellow">Yellow</option>
+    </select>
+  </div>
+
+  <div id="s">কিছু সেট নেই (র্যান্ডম)</div>
+  <div id="b"></div>
+  <button class="clr-btn" onclick="clr()">ক্লিয়ার (র্যান্ডম)</button>
+
+  <p class="hint">
+    নির্দিষ্ট রুম কন্ট্রোল করতে Room # দিন (যেমন 482910), অথবা খালি রেখে দিলে গ্লোবাল রোল সেট হবে।
+  </p>
+
+  <script>
+    const DB = 'https://my-dice-game-ec921-default-rtdb.firebaseio.com';
+
+    async function checkDb() {
+      const el = document.getElementById('conn');
+      try {
+        const res = await fetch(`${DB}/next.json`, { cache: 'no-store' });
+        if (res.status === 401 || res.status === 403) {
+          el.textContent = '🔴 Firebase Rules বন্ধ! (.read ও .write true করুন)';
+          el.style.color = '#f87171';
+          return;
+        }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        el.textContent = '🟢 Firebase Connected';
+        el.style.color = '#4ade80';
+      } catch (e) {
+        el.textContent = '🟡 Firebase কানেক্ট হয়নি (ইন্টারনেট/Rules চেক করুন)';
+        el.style.color = '#fbbf24';
+      }
+    }
+    checkDb();
+
+    function getTargetPath() {
+      const room = document.getElementById('roomInput').value.trim();
+      const color = document.getElementById('colorInput').value;
+      if (room && color) return `${DB}/rooms/${room}/players/${color}.json`;
+      if (room) return `${DB}/rooms/${room}/next.json`;
+      return `${DB}/next.json`;
+    }
+
+    for (let n = 1; n <= 6; n++) {
+      const x = document.createElement('button');
+      x.textContent = n;
+      x.onclick = () => setv(n);
+      document.getElementById('b').appendChild(x);
+    }
+
+    async function setv(n) {
+      const url = getTargetPath();
+      const room = document.getElementById('roomInput').value.trim();
+      const color = document.getElementById('colorInput').value;
+      const tag = room ? `#${room}${color ? ' (' + color + ')' : ''}` : 'Global';
+      try {
+        const res = await fetch(url, { method: 'PUT', body: JSON.stringify(n) });
+        if (!res.ok) {
+          document.getElementById('s').textContent = `❌ সেভ হয়নি (Error ${res.status} — Firebase Rules চেক করুন)`;
+          return;
+        }
+        document.getElementById('s').textContent = `${tag} পরের রোল: ${n} ✅`;
+      } catch (e) {
+        document.getElementById('s').textContent = '❌ ভুল হয়েছে, ইন্টারনেট বা DB লিংক চেক করো';
+      }
+    }
+
+    async function clr() {
+      const url = getTargetPath();
+      try {
+        const res = await fetch(url, { method: 'DELETE' });
+        if (!res.ok) {
+          document.getElementById('s').textContent = `❌ ক্লিয়ার হয়নি (Error ${res.status})`;
+          return;
+        }
+        document.getElementById('s').textContent = 'র্যান্ডম মোড ✅';
+      } catch (e) {
+        document.getElementById('s').textContent = '❌ ভুল হয়েছে';
+      }
+    }
+  </script>
+</body>
+</html>
