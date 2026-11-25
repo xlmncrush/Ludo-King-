@@ -1,0 +1,2943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Ludo King - Pass N Play Edition</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Lilita+One&family=Roboto+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* Reset and non-selectable mobile game viewport styling */
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, #091530 0%, #02050c 100%);
+      font-family: 'Roboto Condensed', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Strictly locked 9:19.5 tall mobile portrait container */
+    .phone-frame {
+      position: relative;
+      width: min(100vw, calc(100vh * 9 / 19.5));
+      height: min(100vh, calc(100vw * 19.5 / 9));
+      max-width: 390px;
+      max-height: 845px;
+      background: radial-gradient(circle at 50% 34%, #2b64c7 0%, #194391 56%, #0c2254 100%);
+      overflow: hidden;
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.9), 0 0 0 2px #2653a8;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Subtle Ludo board watermark backdrop */
+    .bg-watermark {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.22;
+      background-image: url("data:image/svg+xml,%3Csvg width='220' height='220' viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='rotate(-22 110 110)' fill='none' stroke='%2308193d' stroke-width='1.6'%3E%3Crect x='12' y='12' width='62' height='62' rx='6' fill='%230b204d' fill-opacity='0.35'/%3E%3Ccircle cx='30' cy='30' r='8' fill='%2312306e'/%3E%3Ccircle cx='56' cy='30' r='8' fill='%2312306e'/%3E%3Ccircle cx='30' cy='56' r='8' fill='%2312306e'/%3E%3Ccircle cx='56' cy='56' r='8' fill='%2312306e'/%3E%3Crect x='146' y='12' width='62' height='62' rx='6' fill='%230b204d' fill-opacity='0.35'/%3E%3Ccircle cx='164' cy='30' r='8' fill='%2312306e'/%3E%3Ccircle cx='190' cy='30' r='8' fill='%2312306e'/%3E%3Ccircle cx='164' cy='56' r='8' fill='%2312306e'/%3E%3Ccircle cx='190' cy='56' r='8' fill='%2312306e'/%3E%3Crect x='12' y='146' width='62' height='62' rx='6' fill='%230b204d' fill-opacity='0.35'/%3E%3Ccircle cx='30' cy='164' r='8' fill='%2312306e'/%3E%3Ccircle cx='56' cy='164' r='8' fill='%2312306e'/%3E%3Ccircle cx='30' cy='190' r='8' fill='%2312306e'/%3E%3Ccircle cx='56' cy='190' r='8' fill='%2312306e'/%3E%3Crect x='146' y='146' width='62' height='62' rx='6' fill='%230b204d' fill-opacity='0.35'/%3E%3Ccircle cx='164' cy='164' r='8' fill='%2312306e'/%3E%3Ccircle cx='190' cy='164' r='8' fill='%2312306e'/%3E%3Ccircle cx='164' cy='190' r='8' fill='%2312306e'/%3E%3Ccircle cx='190' cy='190' r='8' fill='%2312306e'/%3E%3Crect x='80' y='12' width='60' height='62'/%3E%3Crect x='80' y='146' width='60' height='62'/%3E%3Crect x='12' y='80' width='62' height='60'/%3E%3Crect x='146' y='80' width='62' height='60'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: 200px 200px;
+    }
+
+    /* Soft ambient highlight behind hero emblem */
+    .center-glow {
+      position: absolute;
+      top: 56px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 315px;
+      height: 225px;
+      background: radial-gradient(circle, rgba(130, 196, 255, 0.38) 0%, rgba(30, 74, 168, 0) 72%);
+      pointer-events: none;
+    }
+
+    /* Slim, crisp game label typography */
+    .card-label-text {
+      font-family: 'Lilita One', cursive;
+      color: #ffffff;
+      -webkit-text-stroke: 1.1px #140900;
+      paint-order: stroke fill;
+      text-shadow: 0 2px 0 #140900;
+      letter-spacing: 0.4px;
+      line-height: 1;
+    }
+
+    .claim-text {
+      font-family: 'Lilita One', cursive;
+      color: #632205;
+      text-shadow: 0 1px 0 #ffea9e;
+      letter-spacing: 0.5px;
+    }
+
+    /* Tactile button response */
+    .btn-tactile {
+      transition: transform 0.09s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.12s ease;
+      cursor: pointer;
+    }
+    .btn-tactile:hover {
+      filter: brightness(1.07);
+    }
+    .btn-tactile:active {
+      transform: scale(0.94);
+    }
+
+    /* Top header height locked so main area gets maximum vertical room */
+    .top-header-wrap {
+      position: relative;
+      z-index: 20;
+      width: 100%;
+      height: 54px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, rgba(10, 28, 72, 0.96) 0%, rgba(16, 46, 112, 0.85) 100%);
+      border-bottom: 1.5px solid rgba(240, 190, 73, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+    }
+
+    /* Glossy 3D split mode card */
+    .mode-card {
+      background: linear-gradient(180deg, #2d66d4 0%, #1d4ba6 58%, #153a87 100%);
+      border: 2px solid #f2c446;
+      border-radius: 13px;
+      box-shadow: 0 4px 0 #704706, 0 7px 12px rgba(0, 0, 0, 0.45), inset 0 1.5px 2px rgba(185, 222, 255, 0.55);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: visible;
+    }
+
+    .mode-card-footer {
+      background: linear-gradient(180deg, #fbd04b 0%, #f0b624 55%, #df9a0e 100%);
+      border-top: 1.5px solid #ffefa6;
+      border-bottom-left-radius: 11px;
+      border-bottom-right-radius: 11px;
+      height: 28px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 -2px 0 #b57707;
+    }
+
+    /* Mini square action cards (7 Up Down / Snakes & Ladders) */
+    .mini-square-card {
+      width: 54px;
+      height: 54px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #2a61cc 0%, #143982 100%);
+      border: 2px solid #f0be49;
+      box-shadow: 0 3.5px 0 #664207, 0 5px 10px rgba(0, 0, 0, 0.48), inset 0 1.5px 2px rgba(175, 215, 255, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Bottom 5-tab navigation bar */
+    .bottom-nav {
+      position: relative;
+      z-index: 20;
+      height: 62px;
+      flex-shrink: 0;
+      width: 100%;
+      background: linear-gradient(180deg, #174091 0%, #0b2254 100%);
+      border-top: 2px solid #f0be49;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      align-items: center;
+      padding: 0 2px;
+    }
+
+    .nav-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      height: 100%;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.15s ease;
+    }
+    .nav-tab.active {
+      background: linear-gradient(180deg, rgba(61, 134, 255, 0.38) 0%, rgba(20, 56, 130, 0.12) 100%);
+      border-top: 2.5px solid #ffd43b;
+      margin-top: -2px;
+    }
+    .nav-tab:active {
+      transform: scale(0.93);
+    }
+
+    .nav-label {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 9.5px;
+      font-weight: 800;
+      color: #c8dcff;
+      letter-spacing: 0.3px;
+    }
+    .nav-tab.active .nav-label {
+      color: #ffd43b;
+    }
+
+    /* Generic Modal Overlay */
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 60;
+      background: rgba(4, 10, 28, 0.78);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    /* Pass N Play Full-Screen Setup Overlay */
+    .pnp-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 35;
+      background: rgba(3, 10, 28, 0.85);
+      backdrop-filter: blur(2.5px);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .pnp-overlay.show {
+      display: flex;
+      animation: pnpFadeIn 0.16s ease-out;
+    }
+    @keyframes pnpFadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .pnp-gold-panel {
+      width: 100%;
+      background: linear-gradient(180deg, #123685 0%, #091e52 100%);
+      border-top: 2.2px solid #f0be49;
+      border-bottom: 2.2px solid #f0be49;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 240, 170, 0.25);
+    }
+
+    .pnp-game-panel {
+      width: 100%;
+      background: linear-gradient(180deg, #1844a1 0%, #0a235e 55%, #071947 100%);
+      border-top: 2.2px solid #f0be49;
+      border-bottom: 2.2px solid #f0be49;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 240, 170, 0.25);
+    }
+
+    .pnp-icon-box {
+      width: 54px;
+      height: 54px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #245ac7 0%, #0e2e73 100%);
+      border: 2px solid #f0be49;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(170, 215, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .pnp-pill-blue {
+      position: relative;
+      height: 44px;
+      width: 178px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #2154b8 0%, #0e2c6b 100%);
+      border: 2px solid #f0be49;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5), 0 0 8px rgba(240, 190, 73, 0.28);
+      display: flex;
+      align-items: center;
+      padding-left: 48px;
+      padding-right: 12px;
+    }
+
+    .pnp-pill-green {
+      position: relative;
+      height: 44px;
+      width: 178px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #59c22b 0%, #2b750f 100%);
+      border: 2px solid #f0be49;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5), 0 0 8px rgba(240, 190, 73, 0.28);
+      display: flex;
+      align-items: center;
+      padding-left: 48px;
+      padding-right: 12px;
+    }
+
+    .pnp-radio-circle {
+      position: absolute;
+      left: -2px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      border-radius: 9999px;
+      background: linear-gradient(180deg, #163d8a 0%, #091d4a 100%);
+      border: 2.5px solid #ffd43b;
+      box-shadow: 0 0 8px rgba(255, 212, 59, 0.45), inset 0 2px 4px rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ==================== IN-GAME BOARD SCREEN ==================== */
+    .game-board-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 45;
+      background: radial-gradient(circle at 50% 42%, #2057b5 0%, #103275 58%, #071940 100%);
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+    .game-board-screen.show {
+      display: flex;
+      animation: pnpFadeIn 0.2s ease-out;
+    }
+
+    /* High-craft beveled Ludo Board frame */
+    .ludo-board-frame {
+      box-shadow:
+        0 12px 28px rgba(0, 0, 0, 0.78),
+        0 0 0 3px #1e3a70,
+        0 0 0 4.5px rgba(242, 196, 70, 0.82);
+      border-radius: 5px;
+    }
+
+    /* Token hop & pulse animations */
+    .ludo-token-el {
+      position: absolute;
+      transition: left 0.08s cubic-bezier(0.25, 1, 0.5, 1), top 0.08s cubic-bezier(0.25, 1, 0.5, 1), transform 0.075s ease;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      pointer-events: none;
+    }
+    .ludo-token-el.hopping {
+      transform: translate(-50%, -74%) scale(1.22) !important;
+      filter: drop-shadow(0 5px 4px rgba(0,0,0,0.4));
+      z-index: 30;
+    }
+    .ludo-token-el.movable {
+      pointer-events: auto;
+      cursor: pointer;
+      z-index: 32;
+      animation: tokenPulse 0.62s ease-in-out infinite alternate;
+    }
+    .movable-halo {
+      position: absolute;
+      left: 50%;
+      top: 66%;
+      width: 28px;
+      height: 28px;
+      margin-left: -14px;
+      margin-top: -14px;
+      border-radius: 9999px;
+      border: 2.5px dashed #1e293b;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 0 10px rgba(255, 212, 59, 0.8);
+      animation: spinHalo 1.6s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes spinHalo {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes tokenPulse {
+      0% { transform: translate(-50%, -50%) scale(1.03); }
+      100% { transform: translate(-50%, -64%) scale(1.18); }
+    }
+    @keyframes yardPulseAnim {
+      0%, 100% { opacity: 0.0; }
+      50% { opacity: 0.24; }
+    }
+    .yard-pulse {
+      position: absolute;
+      width: 40%;
+      height: 40%;
+      background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.35) 70%, transparent 100%);
+      pointer-events: none;
+      opacity: 0;
+      z-index: 5;
+    }
+    .yard-pulse.active {
+      animation: yardPulseAnim 1.1s ease-in-out infinite;
+    }
+
+    /* ==================== TRUE 3D TUMBLING DICE (MATCHING VIDEO) ==================== */
+    .dice-stage {
+      width: 40px;
+      height: 40px;
+      perspective: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 40;
+      transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
+    }
+    .dice-stage.is-rolling {
+      transform: translateY(-5px) scale(1.36);
+      filter: drop-shadow(0 8px 9px rgba(0, 0, 0, 0.55));
+      z-index: 60;
+    }
+    .dice-stage.is-landing {
+      animation: diceLandBounce 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes diceLandBounce {
+      0% { transform: translateY(-3px) scale(1.16); }
+      55% { transform: translateY(1px) scale(0.94); }
+      100% { transform: translateY(0px) scale(1); }
+    }
+
+    .dice-cube {
+      width: 36px;
+      height: 36px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.62s cubic-bezier(0.18, 0.78, 0.32, 1);
+    }
+    .dice-cube.tumbling {
+      transition: transform 0.62s cubic-bezier(0.18, 0.78, 0.32, 1);
+    }
+
+    .dice-face {
+      position: absolute;
+      inset: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 7px;
+      background: linear-gradient(145deg, #ffffff 0%, #edf2f7 65%, #d6dfe9 100%);
+      border: 1.4px solid #8a99ad;
+      box-shadow: inset 0 1.5px 2px rgba(255, 255, 255, 0.95), inset 0 -2px 3px rgba(100, 116, 139, 0.35);
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Subtle shading per face for realistic 3D depth during tumble */
+    .dice-face-1 { transform: rotateY(0deg) translateZ(18px); }
+    .dice-face-6 { transform: rotateY(180deg) translateZ(18px); background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%); }
+    .dice-face-3 { transform: rotateY(90deg) translateZ(18px); background: linear-gradient(145deg, #f1f5f9 0%, #cbd5e1 100%); }
+    .dice-face-4 { transform: rotateY(-90deg) translateZ(18px); background: linear-gradient(145deg, #f1f5f9 0%, #cbd5e1 100%); }
+    .dice-face-5 { transform: rotateX(90deg) translateZ(18px); background: linear-gradient(145deg, #ffffff 0%, #e2e8f0 100%); }
+    .dice-face-2 { transform: rotateX(-90deg) translateZ(18px); background: linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 100%); }
+
+    /* Bouncing turn arrow */
+    @keyframes arrowBounceLeft {
+      0%, 100% { transform: translate(0px, -50%); }
+      50% { transform: translate(-6px, -50%); }
+    }
+    @keyframes arrowBounceRight {
+      0%, 100% { transform: translate(0px, -50%) scaleX(-1); }
+      50% { transform: translate(6px, -50%) scaleX(-1); }
+    }
+    .arrow-point-left {
+      animation: arrowBounceLeft 0.65s ease-in-out infinite;
+    }
+    .arrow-point-right {
+      animation: arrowBounceRight 0.65s ease-in-out infinite;
+    }
+
+    .dice-pod {
+      width: 112px;
+      height: 46px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #2764cf 0%, #164094 55%, #0c2761 100%);
+      border: 2px solid #f2c446;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.65), inset 0 1.5px 2px rgba(190, 225, 255, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6px;
+      position: relative;
+      transition: opacity 0.2s ease, filter 0.2s ease, box-shadow 0.25s ease;
+    }
+    .dice-pod.active-pod {
+      box-shadow: 0 0 16px rgba(255, 212, 59, 0.72), 0 4px 10px rgba(0, 0, 0, 0.65), inset 0 1.5px 2px rgba(255, 245, 195, 0.7);
+      border-color: #ffe373;
+    }
+    .dice-pod.inactive {
+      opacity: 0.74;
+    }
+    .dice-slot {
+      width: 50px;
+      height: 50px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #f2dde0 0%, #d4b5ba 100%);
+      border: 2.2px solid #f2c446;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.58), inset 0 2px 4px rgba(90, 75, 45, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px;
+      flex-shrink: 0;
+      cursor: pointer;
+      position: relative;
+      overflow: visible;
+    }
+    .team-badge {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-radius: 9999px;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Lilita One', cursive;
+      font-size: 13px;
+      color: #ffffff;
+      -webkit-text-stroke: 0.8px #0f172a;
+      paint-order: stroke fill;
+      z-index: 15;
+    }
+    .team-badge.show { display: flex; }
+
+    @keyframes floatSoft {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-3px); }
+    }
+    .animate-float {
+      animation: floatSoft 2.8s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 212, 59, 0.55)); }
+      50% { filter: drop-shadow(0 0 11px rgba(255, 212, 59, 0.95)); }
+    }
+    .animate-glow {
+      animation: glowPulse 2.2s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="bg-watermark"></div>
+    <div class="center-glow"></div>
+
+    <!-- ==================== 1. TOP HEADER BAR ==================== -->
+    <header class="top-header-wrap">
+      <div class="flex items-center gap-1.5">
+        <button onclick="openModal('profile')" class="btn-tactile relative w-9 h-9 rounded-lg bg-gradient-to-b from-[#1f4ba8] to-[#112d6b] border-2 border-[#f0be49] flex items-center justify-center shadow">
+          <svg viewBox="0 0 32 32" class="w-7 h-7">
+            <circle cx="16" cy="12" r="6" fill="#ffd4a3"/>
+            <path d="M6,28 C6,21 26,21 26,28 Z" fill="#3a7bd5"/>
+            <path d="M10,10 C10,5 22,5 22,10 C22,8 10,8 10,10 Z" fill="#2c1e16"/>
+          </svg>
+          <span class="absolute -bottom-1 -left-1 w-4 h-4 rounded-full bg-gradient-to-b from-[#fff099] to-[#e09d12] border border-[#593500] text-[#3d1f00] text-[9px] font-black flex items-center justify-center">1</span>
+        </button>
+
+        <button onclick="openModal('settings')" class="btn-tactile w-7 h-7 rounded-lg bg-gradient-to-b from-[#2354b8] to-[#133273] border border-[#74a5ff]/70 flex items-center justify-center text-[#d8e6ff] shadow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.6.77 1.02 1.4 1.09H21a2 2 0 1 1 0 4h-.09c-.63.07-1.14.49-1.51 1z"/>
+          </svg>
+        </button>
+
+        <button onclick="openModal('inbox')" class="btn-tactile w-7 h-7 rounded-lg bg-gradient-to-b from-[#2354b8] to-[#133273] border border-[#74a5ff]/70 flex items-center justify-center text-[#ffd43b] shadow">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <rect x="3" y="5" width="18" height="14" rx="2"/>
+            <polyline points="3 7 12 13 21 7"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-1.5">
+        <div onclick="addCurrency('diamonds', 10)" class="btn-tactile h-6 bg-[#091a42] border border-[#42d4ff]/80 rounded-full pl-1.5 pr-1 flex items-center gap-1 shadow-inner">
+          <span class="text-xs leading-none">💎</span>
+          <span id="diamondCount" class="text-white font-extrabold text-[11px]">50</span>
+          <span class="w-4 h-4 rounded-full bg-gradient-to-b from-[#5ce63c] to-[#269910] text-white font-black text-[11px] flex items-center justify-center leading-none shadow">+</span>
+        </div>
+
+        <div onclick="addCurrency('coins', 500)" class="btn-tactile h-6 bg-[#091a42] border border-[#ffd43b]/85 rounded-full pl-1.5 pr-1 flex items-center gap-1 shadow-inner">
+          <span class="text-xs leading-none">🪙</span>
+          <span id="coinCount" class="text-white font-extrabold text-[11px]">2,250</span>
+          <span class="w-4 h-4 rounded-full bg-gradient-to-b from-[#5ce63c] to-[#269910] text-white font-black text-[11px] flex items-center justify-center leading-none shadow">+</span>
+        </div>
+
+        <button onclick="openModal('store')" class="btn-tactile w-7 h-7 rounded-lg bg-gradient-to-b from-[#ffe266] to-[#d99414] border border-[#fff5ba] flex items-center justify-center text-[#472900] shadow">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ==================== 2. COMPACT MAIN CONTENT AREA ==================== -->
+    <main class="relative flex-1 flex flex-col justify-between px-2.5 pt-0.5 pb-1 z-10 min-h-0">
+
+      <!-- HERO SECTION -->
+      <div class="relative w-full h-[218px] flex-shrink-0">
+        <!-- Left Floating Icons -->
+        <div class="absolute left-0 top-0.5 flex flex-col items-center gap-2 z-20">
+          <button onclick="openModal('starter')" class="btn-tactile w-[45px]">
+            <svg viewBox="0 0 60 52" class="w-full h-auto drop-shadow-[0_3px_5px_rgba(0,0,0,0.55)]">
+              <defs>
+                <linearGradient id="gemBlue" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#bdf5ff"/>
+                  <stop offset="45%" stop-color="#2bb8ff"/>
+                  <stop offset="100%" stop-color="#074c99"/>
+                </linearGradient>
+              </defs>
+              <polygon points="30,3 44,14 30,33 16,14" fill="url(#gemBlue)" stroke="#08366b" stroke-width="2"/>
+              <polygon points="30,3 37,14 30,33 23,14" fill="#8ae7ff" opacity="0.45"/>
+              <circle cx="21" cy="33" r="6" fill="#ffd43b" stroke="#6b4200" stroke-width="1.4"/>
+              <circle cx="39" cy="33" r="6" fill="#ffd43b" stroke="#6b4200" stroke-width="1.4"/>
+              <path d="M4,33 L56,33 L52,46 L8,46 Z" fill="#1a120b" stroke="#ffd43b" stroke-width="1.6"/>
+              <text x="30" y="39.5" text-anchor="middle" fill="#ffe66d" font-size="7.5" font-weight="900">STARTER</text>
+              <text x="30" y="45" text-anchor="middle" fill="#ffffff" font-size="6.5" font-weight="900">PACK</text>
+            </svg>
+          </button>
+
+          <button onclick="openModal('vip')" class="btn-tactile w-[42px] h-[44px]">
+            <svg viewBox="0 0 64 66" class="w-full h-full drop-shadow-[0_4px_7px_rgba(0,0,0,0.6)]">
+              <defs>
+                <radialGradient id="kHalo" cx="50%" cy="55%" r="50%">
+                  <stop offset="40%" stop-color="#ffe666" stop-opacity="0.55"/>
+                  <stop offset="100%" stop-color="#ffe666" stop-opacity="0"/>
+                </radialGradient>
+                <linearGradient id="kGold" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#fff6b3"/>
+                  <stop offset="45%" stop-color="#f5b81d"/>
+                  <stop offset="100%" stop-color="#8c5400"/>
+                </linearGradient>
+              </defs>
+              <circle cx="32" cy="38" r="30" fill="url(#kHalo)"/>
+              <path d="M18,17 L21,7 L27,13 L32,4 L37,13 L43,7 L46,17 Z" fill="url(#kGold)" stroke="#593500" stroke-width="1.6" stroke-linejoin="round"/>
+              <circle cx="21" cy="7" r="1.5" fill="#fff6b3"/>
+              <circle cx="32" cy="4" r="1.8" fill="#fff6b3"/>
+              <circle cx="43" cy="7" r="1.5" fill="#fff6b3"/>
+              <circle cx="32" cy="38" r="21" fill="url(#kGold)" stroke="#593500" stroke-width="2"/>
+              <circle cx="32" cy="38" r="16.5" fill="#170f04" stroke="#c98b18" stroke-width="1.6"/>
+              <text x="32" y="46.5" text-anchor="middle" fill="url(#kGold)" font-family="Cinzel, serif" font-weight="900" font-size="25">K</text>
+            </svg>
+          </button>
+
+          <button onclick="openModal('live')" class="btn-tactile w-[45px]">
+            <svg viewBox="0 0 64 60" class="w-full h-auto drop-shadow-[0_3px_5px_rgba(0,0,0,0.55)]">
+              <path d="M14,13 L17,5 L23,10 L27,4 L31,10 L35,5 L38,13 Z" fill="#ffd43b" stroke="#5e3600" stroke-width="1.4" stroke-linejoin="round"/>
+              <rect x="6" y="13" width="52" height="28" rx="9" fill="#e61c24" stroke="#ffd43b" stroke-width="2.2"/>
+              <text x="43" y="10.5" fill="#ffd43b" font-size="7" font-weight="900">KING</text>
+              <text x="32" y="27" text-anchor="middle" fill="#ffffff" font-size="11.5" font-family="Lilita One" stroke="#470508" stroke-width="0.7">LUDO</text>
+              <rect x="23" y="29" width="18" height="10" rx="2.5" fill="#ffffff"/>
+              <polygon points="30,31 30,37 35.5,34" fill="#e61c24"/>
+              <rect x="11" y="43" width="42" height="14" rx="3.5" fill="#ffd43b" stroke="#5e3600" stroke-width="1.5"/>
+              <text x="32" y="53.5" text-anchor="middle" fill="#1a0e00" font-size="10.5" font-weight="900">LIVE</text>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Center Hero -->
+        <div class="flex flex-col items-center w-full">
+          <div onclick="openModal('ad')" class="btn-tactile flex items-start gap-1 ml-5">
+            <div class="w-[38px] h-[38px] rounded-[4px] bg-[#ebd5b3] border border-[#a88d67] shadow overflow-hidden">
+              <svg viewBox="0 0 60 60" class="w-full h-full">
+                <rect width="60" height="60" fill="#e6cb9c"/>
+                <circle cx="30" cy="24" r="4" fill="#c92a2a"/>
+                <circle cx="22" cy="20" r="3.8" fill="#212529"/><circle cx="38" cy="20" r="3.8" fill="#212529"/>
+                <circle cx="22" cy="28" r="3.8" fill="#c79152"/><circle cx="38" cy="28" r="3.8" fill="#c79152"/>
+                <circle cx="30" cy="16" r="3.8" fill="#c79152"/><circle cx="30" cy="32" r="3.8" fill="#212529"/>
+                <circle cx="44" cy="45" r="6" fill="#2b59c3" stroke="#ffffff" stroke-width="1.3"/>
+              </svg>
+            </div>
+            <span class="text-[#ffcf33] font-extrabold text-[11.5px] drop-shadow">Ad</span>
+          </div>
+
+          <div class="relative w-[262px] h-[182px] -mt-1.5 flex items-center justify-center pointer-events-none">
+            <svg viewBox="0 0 380 280" class="w-full h-full overflow-visible drop-shadow-[0_8px_12px_rgba(0,0,0,0.58)]">
+              <defs>
+                <linearGradient id="goldRim" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#fff8bf"/>
+                  <stop offset="35%" stop-color="#ffd23f"/>
+                  <stop offset="75%" stop-color="#d6910e"/>
+                  <stop offset="100%" stop-color="#7d4c00"/>
+                </linearGradient>
+                <linearGradient id="goldRimInner" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#b87807"/>
+                  <stop offset="100%" stop-color="#ffe785"/>
+                </linearGradient>
+                <radialGradient id="cyanPawn" cx="32%" cy="26%" r="72%">
+                  <stop offset="0%" stop-color="#e3fbff"/>
+                  <stop offset="28%" stop-color="#6ce0ff"/>
+                  <stop offset="70%" stop-color="#1e90e8"/>
+                  <stop offset="100%" stop-color="#074487"/>
+                </radialGradient>
+                <radialGradient id="yellowPawn" cx="32%" cy="26%" r="72%">
+                  <stop offset="0%" stop-color="#ffffdb"/>
+                  <stop offset="30%" stop-color="#ffe45e"/>
+                  <stop offset="72%" stop-color="#f0ad16"/>
+                  <stop offset="100%" stop-color="#8a5200"/>
+                </radialGradient>
+                <radialGradient id="redPawn" cx="32%" cy="26%" r="72%">
+                  <stop offset="0%" stop-color="#ffd1d8"/>
+                  <stop offset="30%" stop-color="#ff4757"/>
+                  <stop offset="75%" stop-color="#c91224"/>
+                  <stop offset="100%" stop-color="#63030d"/>
+                </radialGradient>
+                <radialGradient id="greenPawn" cx="32%" cy="26%" r="72%">
+                  <stop offset="0%" stop-color="#dcffcf"/>
+                  <stop offset="30%" stop-color="#6ee63e"/>
+                  <stop offset="75%" stop-color="#2ca614"/>
+                  <stop offset="100%" stop-color="#0e4a03"/>
+                </radialGradient>
+                <linearGradient id="dieTop" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#ffffff"/>
+                  <stop offset="100%" stop-color="#e2e8f0"/>
+                </linearGradient>
+                <linearGradient id="dieFront" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#f1f5f9"/>
+                  <stop offset="100%" stop-color="#cbd5e1"/>
+                </linearGradient>
+                <linearGradient id="dieSide" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#cbd5e1"/>
+                  <stop offset="100%" stop-color="#94a3b8"/>
+                </linearGradient>
+              </defs>
+
+              <g transform="translate(0, 6)">
+                <polygon points="74,218 306,218 298,228 82,228" fill="#8f5b10" stroke="#361d00" stroke-width="1.8"/>
+                <polygon points="118,144 262,144 306,218 74,218" fill="#f8fafc" stroke="#3d2200" stroke-width="2.2"/>
+                <polygon points="122,147 172,147 166,174 106,174" fill="#e62e3d" stroke="#850e17" stroke-width="1"/>
+                <polygon points="129,151 164,151 160,170 117,170" fill="#ffffff"/>
+                <circle cx="133" cy="156" r="3" fill="#e62e3d"/><circle cx="152" cy="156" r="3" fill="#e62e3d"/>
+                <circle cx="128" cy="165" r="3" fill="#e62e3d"/><circle cx="149" cy="165" r="3" fill="#e62e3d"/>
+                <polygon points="208,147 258,147 274,174 214,174" fill="#3eb825" stroke="#165908" stroke-width="1"/>
+                <polygon points="216,151 251,151 263,170 220,170" fill="#ffffff"/>
+                <circle cx="228" cy="156" r="3" fill="#3eb825"/><circle cx="247" cy="156" r="3" fill="#3eb825"/>
+                <circle cx="231" cy="165" r="3" fill="#3eb825"/><circle cx="252" cy="165" r="3" fill="#3eb825"/>
+                <polygon points="101,185 164,185 156,214 81,214" fill="#28a0f0" stroke="#0d4e85" stroke-width="1"/>
+                <polygon points="111,189 154,189 148,209 94,209" fill="#ffffff"/>
+                <circle cx="116" cy="195" r="3.5" fill="#28a0f0"/><circle cx="140" cy="195" r="3.5" fill="#28a0f0"/>
+                <circle cx="109" cy="204" r="3.5" fill="#28a0f0"/><circle cx="136" cy="204" r="3.5" fill="#28a0f0"/>
+                <polygon points="216,185 279,185 299,214 224,214" fill="#f7c428" stroke="#8c6200" stroke-width="1"/>
+                <polygon points="226,189 269,189 286,209 232,209" fill="#ffffff"/>
+                <circle cx="240" cy="195" r="3.5" fill="#f7c428"/><circle cx="264" cy="195" r="3.5" fill="#f7c428"/>
+                <circle cx="244" cy="204" r="3.5" fill="#f7c428"/><circle cx="271" cy="204" r="3.5" fill="#f7c428"/>
+                <polygon points="184,147 196,147 198,174 182,174" fill="#3eb825"/>
+                <polygon points="180,185 200,185 203,214 177,214" fill="#28a0f0"/>
+                <polygon points="104,177 166,177 165,182 102,182" fill="#e62e3d"/>
+                <polygon points="214,177 276,177 278,182 215,182" fill="#f7c428"/>
+                <g stroke="#94a3b8" stroke-width="0.7" opacity="0.85">
+                  <line x1="173" y1="147" x2="165" y2="214"/>
+                  <line x1="207" y1="147" x2="215" y2="214"/>
+                  <line x1="104" y1="175" x2="276" y2="175"/>
+                  <line x1="101" y1="184" x2="279" y2="184"/>
+                  <line x1="168" y1="194" x2="212" y2="194"/>
+                  <line x1="167" y1="204" x2="213" y2="204"/>
+                </g>
+              </g>
+
+              <g transform="translate(158, 126) rotate(-10)">
+                <polygon points="28,0 56,10 28,22 0,10" fill="url(#dieTop)" stroke="#334155" stroke-width="1.8" stroke-linejoin="round"/>
+                <polygon points="0,10 28,22 28,52 0,38" fill="url(#dieFront)" stroke="#334155" stroke-width="1.8" stroke-linejoin="round"/>
+                <polygon points="28,22 56,10 56,38 28,52" fill="url(#dieSide)" stroke="#334155" stroke-width="1.8" stroke-linejoin="round"/>
+                <circle cx="28" cy="11" r="2.6" fill="#0f172a"/><circle cx="17" cy="10" r="2.3" fill="#0f172a"/>
+                <circle cx="39" cy="10" r="2.3" fill="#0f172a"/><circle cx="28" cy="5.5" r="2.1" fill="#0f172a"/>
+                <circle cx="28" cy="16.5" r="2.1" fill="#0f172a"/><circle cx="9" cy="21" r="2.6" fill="#0f172a"/>
+                <circle cx="20" cy="26" r="2.6" fill="#0f172a"/><circle cx="9" cy="34" r="2.6" fill="#0f172a"/>
+                <circle cx="20" cy="39" r="2.6" fill="#0f172a"/><circle cx="37" cy="38" r="2.5" fill="#0f172a"/>
+                <circle cx="47" cy="22" r="2.5" fill="#0f172a"/>
+              </g>
+
+              <g transform="translate(95, 114) scale(0.68)">
+                <ellipse cx="30" cy="77" rx="19" ry="5" fill="rgba(0,0,0,0.35)"/>
+                <path d="M11,73 C11,55 18,43 23,33 L37,33 C42,43 49,55 49,73 C49,80 11,80 11,73 Z" fill="url(#redPawn)" stroke="#47040c" stroke-width="2.4"/>
+                <circle cx="30" cy="19" r="14.5" fill="url(#redPawn)" stroke="#47040c" stroke-width="2.4"/>
+                <ellipse cx="25" cy="14" rx="4.5" ry="3" transform="rotate(-25 25 14)" fill="#ffffff" opacity="0.65"/>
+              </g>
+              <g transform="translate(245, 114) scale(0.68)">
+                <ellipse cx="30" cy="77" rx="19" ry="5" fill="rgba(0,0,0,0.35)"/>
+                <path d="M11,73 C11,55 18,43 23,33 L37,33 C42,43 49,55 49,73 C49,80 11,80 11,73 Z" fill="url(#greenPawn)" stroke="#0e4203" stroke-width="2.4"/>
+                <circle cx="30" cy="19" r="14.5" fill="url(#greenPawn)" stroke="#0e4203" stroke-width="2.4"/>
+                <ellipse cx="25" cy="14" rx="4.5" ry="3" transform="rotate(-25 25 14)" fill="#ffffff" opacity="0.65"/>
+              </g>
+              <g transform="translate(46, 134) scale(1.12)">
+                <ellipse cx="30" cy="78" rx="20" ry="5.5" fill="rgba(0,0,0,0.38)"/>
+                <path d="M10,73 C10,54 18,42 23,32 L37,32 C42,42 50,54 50,73 C50,80 10,80 10,73 Z" fill="url(#cyanPawn)" stroke="#073463" stroke-width="2"/>
+                <path d="M17,67 C18,55 21,46 24,38" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" opacity="0.45" fill="none"/>
+                <circle cx="30" cy="19" r="14.5" fill="url(#cyanPawn)" stroke="#073463" stroke-width="2"/>
+                <ellipse cx="24" cy="13.5" rx="4.8" ry="3.2" transform="rotate(-25 24 13.5)" fill="#ffffff" opacity="0.75"/>
+              </g>
+              <g transform="translate(264, 134) scale(1.12)">
+                <ellipse cx="30" cy="78" rx="20" ry="5.5" fill="rgba(0,0,0,0.38)"/>
+                <path d="M10,73 C10,54 18,42 23,32 L37,32 C42,42 50,54 50,73 C50,80 10,80 10,73 Z" fill="url(#yellowPawn)" stroke="#5c3800" stroke-width="2"/>
+                <path d="M17,67 C18,55 21,46 24,38" stroke="#ffffff" stroke-width="2.8" stroke-linecap="round" opacity="0.45" fill="none"/>
+                <circle cx="30" cy="19" r="14.5" fill="url(#yellowPawn)" stroke="#5c3800" stroke-width="2"/>
+                <ellipse cx="24" cy="13.5" rx="4.8" ry="3.2" transform="rotate(-25 24 13.5)" fill="#ffffff" opacity="0.75"/>
+              </g>
+
+              <text x="248" y="69" text-anchor="middle" fill="url(#goldRim)" stroke="#4a2c00" stroke-width="1.2" font-family="Cinzel, serif" font-weight="900" font-size="24" letter-spacing="1.5">KING</text>
+
+              <g transform="translate(124, 96)">
+                <circle cx="0" cy="0" r="25" fill="url(#goldRim)" stroke="#4a2c00" stroke-width="1.6"/>
+                <circle cx="0" cy="0" r="20.5" fill="url(#goldRimInner)"/>
+                <circle cx="0" cy="0" r="18.5" fill="#ffffff"/>
+                <text x="0" y="11" text-anchor="middle" fill="#28b5ff" stroke="#094a7a" stroke-width="1.4" paint-order="stroke" font-family="Lilita One" font-size="31">L</text>
+              </g>
+              <g transform="translate(168, 96)">
+                <circle cx="0" cy="0" r="25" fill="url(#goldRim)" stroke="#4a2c00" stroke-width="1.6"/>
+                <circle cx="0" cy="0" r="20.5" fill="url(#goldRimInner)"/>
+                <circle cx="0" cy="0" r="18.5" fill="#ffffff"/>
+                <text x="0" y="11" text-anchor="middle" fill="#f02b3b" stroke="#6e0912" stroke-width="1.4" paint-order="stroke" font-family="Lilita One" font-size="31">U</text>
+              </g>
+              <g transform="translate(212, 96)">
+                <circle cx="0" cy="0" r="25" fill="url(#goldRim)" stroke="#4a2c00" stroke-width="1.6"/>
+                <circle cx="0" cy="0" r="20.5" fill="url(#goldRimInner)"/>
+                <circle cx="0" cy="0" r="18.5" fill="#ffffff"/>
+                <text x="0" y="11" text-anchor="middle" fill="#4ec928" stroke="#185904" stroke-width="1.4" paint-order="stroke" font-family="Lilita One" font-size="31">D</text>
+              </g>
+              <g transform="translate(256, 96)">
+                <circle cx="0" cy="0" r="25" fill="url(#goldRim)" stroke="#4a2c00" stroke-width="1.6"/>
+                <circle cx="0" cy="0" r="20.5" fill="url(#goldRimInner)"/>
+                <circle cx="0" cy="0" r="18.5" fill="#ffffff"/>
+                <text x="0" y="11" text-anchor="middle" fill="#ffca28" stroke="#754c00" stroke-width="1.4" paint-order="stroke" font-family="Lilita One" font-size="31">O</text>
+              </g>
+
+              <g transform="translate(62, 33) rotate(-14)">
+                <path d="M12,48 Q38,43 64,48 L62,56 Q38,51 14,56 Z" fill="url(#goldRim)" stroke="#593500" stroke-width="1.8"/>
+                <path d="M12,48 L3,21 L23,36 L38,12 L53,36 L73,21 L64,48 Q38,43 12,48 Z" fill="url(#goldRim)" stroke="#593500" stroke-width="1.8" stroke-linejoin="round"/>
+                <circle cx="3" cy="21" r="2.8" fill="#ffe885" stroke="#593500" stroke-width="1"/>
+                <circle cx="38" cy="12" r="3.2" fill="#ffe885" stroke="#593500" stroke-width="1"/>
+                <circle cx="73" cy="21" r="2.8" fill="#ffe885" stroke="#593500" stroke-width="1"/>
+                <circle cx="24" cy="43" r="2.6" fill="#e62238" stroke="#4a070d" stroke-width="0.8"/>
+                <circle cx="38" cy="41" r="3.1" fill="#2cb8ff" stroke="#073d66" stroke-width="0.8"/>
+                <circle cx="52" cy="43" r="2.6" fill="#4ec928" stroke="#114704" stroke-width="0.8"/>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Right Floating Icons -->
+        <div class="absolute right-0 top-0 flex flex-col items-center gap-1.5 z-20">
+          <button onclick="openModal('vip')" class="btn-tactile w-[42px] h-[40px]">
+            <svg viewBox="0 0 64 60" class="w-full h-full drop-shadow-[0_3px_5px_rgba(0,0,0,0.55)]">
+              <path d="M20,13 L23,5 L29,10 L32,3 L35,10 L41,5 L44,13 Z" fill="#ffd43b" stroke="#6b4200" stroke-width="1.5"/>
+              <circle cx="32" cy="31" r="18" fill="#ffd43b" stroke="#6b4200" stroke-width="2"/>
+              <circle cx="32" cy="31" r="14" fill="#1a1205" stroke="#b87d14" stroke-width="1.4"/>
+              <text x="32" y="38" text-anchor="middle" fill="#ffd43b" font-family="Cinzel, serif" font-weight="900" font-size="20">K</text>
+              <circle cx="16" cy="50" r="5" fill="#ffcf33" stroke="#6b4200" stroke-width="1.2"/>
+              <circle cx="48" cy="50" r="5" fill="#ffcf33" stroke="#6b4200" stroke-width="1.2"/>
+            </svg>
+          </button>
+
+          <button onclick="claimFreeChest()" class="btn-tactile w-[42px] animate-glow">
+            <svg viewBox="0 0 60 54" class="w-full h-auto drop-shadow-[0_3px_5px_rgba(0,0,0,0.55)]">
+              <rect x="12" y="22" width="36" height="20" rx="3" fill="#a85513" stroke="#472103" stroke-width="2"/>
+              <path d="M11,23 C11,11 49,11 49,23 Z" fill="#cf6e1d" stroke="#472103" stroke-width="2"/>
+              <rect x="26" y="20" width="8" height="9" rx="2" fill="#ffd43b" stroke="#5c3900" stroke-width="1.4"/>
+              <text x="30" y="51" text-anchor="middle" fill="#ffd43b" stroke="#2b1700" stroke-width="2.4" paint-order="stroke" font-family="Lilita One" font-size="14">FREE</text>
+            </svg>
+          </button>
+
+          <button onclick="openModal('target')" class="btn-tactile w-[38px] h-[38px]">
+            <svg viewBox="0 0 56 56" class="w-full h-full drop-shadow-[0_3px_5px_rgba(0,0,0,0.55)]">
+              <circle cx="25" cy="29" r="21" fill="#d92626" stroke="#5c0a0a" stroke-width="2"/>
+              <circle cx="25" cy="29" r="15.2" fill="#ffffff"/>
+              <circle cx="25" cy="29" r="10" fill="#d92626"/>
+              <circle cx="25" cy="29" r="4.8" fill="#ffffff"/>
+              <line x1="25" y1="29" x2="48" y2="10" stroke="#1e293b" stroke-width="2.8" stroke-linecap="round"/>
+              <polygon points="39,17 50,6 47,16" fill="#3da5ff" stroke="#0c3b6e" stroke-width="0.8"/>
+            </svg>
+          </button>
+
+          <button onclick="openModal('mascot')" class="btn-tactile w-[50px] h-[42px] -mr-1 animate-float">
+            <svg viewBox="0 0 84 66" class="w-full h-full drop-shadow-[0_4px_6px_rgba(0,0,0,0.55)]">
+              <path d="M29,37 Q18,37 12,31" stroke="#e6a817" stroke-width="4.4" fill="none" stroke-linecap="round"/>
+              <path d="M2,26 C2,24 12,26 14,27 C16,25 21,27 20,31 C21,35 15,37 11,35 Z" fill="#ffffff" stroke="#333" stroke-width="1.3"/>
+              <g transform="translate(28, 8) rotate(12)">
+                <rect x="2" y="10" width="33" height="33" rx="6" fill="#ffd23f" stroke="#6b4400" stroke-width="2"/>
+                <path d="M33,10 L43,6 L43,37 L33,43 Z" fill="#e09e14" stroke="#6b4400" stroke-width="1.8"/>
+                <circle cx="12.5" cy="23.5" r="3.8" fill="#ffffff"/>
+                <circle cx="11.5" cy="23.5" r="1.9" fill="#1a1100"/>
+                <circle cx="23" cy="23.5" r="3.8" fill="#ffffff"/>
+                <circle cx="22" cy="23.5" r="1.9" fill="#1a1100"/>
+                <path d="M11.5,32 Q17.5,37 23.5,32" stroke="#593500" stroke-width="2" fill="none" stroke-linecap="round"/>
+              </g>
+            </svg>
+          </button>
+
+          <button onclick="openModal('help')" class="btn-tactile w-[34px] h-[34px] flex items-center justify-center">
+            <svg viewBox="0 0 40 40" class="w-full h-full drop-shadow-[0_3px_5px_rgba(0,0,0,0.55)]">
+              <path d="M6,6 H34 A4,4 0 0,1 38,10 V27 A4,4 0 0,1 34,31 H17 L10,37 L11,31 H6 A4,4 0 0,1 2,27 V10 A4,4 0 0,1 6,6 Z" fill="#153c8c" stroke="#f0be49" stroke-width="2.2" stroke-linejoin="round"/>
+              <text x="20" y="25" text-anchor="middle" fill="#ffd43b" stroke="#091d4a" stroke-width="1.5" paint-order="stroke" font-family="Lilita One" font-size="21">?</text>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- PRIMARY 3-COLUMN SPLIT CARDS -->
+      <section class="grid grid-cols-3 gap-[7px] px-0.5 flex-shrink-0">
+        <!-- ONLINE -->
+        <div class="flex flex-col items-center">
+          <button onclick="openGameMode('ONLINE')" class="btn-tactile mode-card w-full h-[78px]">
+            <div class="absolute -top-2.5 left-1.5 -rotate-2 z-20 w-[84%] h-[17px] bg-gradient-to-b from-[#ff424e] to-[#b50915] border border-[#ffb3b8] rounded-[4px] shadow-md flex items-center justify-center">
+              <span class="text-white font-extrabold text-[9.5px] tracking-wide drop-shadow">PLAY NOW</span>
+            </div>
+            <div class="flex-1 flex items-center justify-center pt-1">
+              <svg viewBox="0 0 116 58" class="w-[88px] h-[44px]">
+                <defs>
+                  <radialGradient id="globeGrad" cx="35%" cy="30%" r="70%">
+                    <stop offset="0%" stop-color="#6b7cff"/>
+                    <stop offset="55%" stop-color="#2b38c9"/>
+                    <stop offset="100%" stop-color="#14186b"/>
+                  </radialGradient>
+                  <linearGradient id="phoneGold" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#ffe785"/>
+                    <stop offset="100%" stop-color="#d48e0e"/>
+                  </linearGradient>
+                </defs>
+                <circle cx="58" cy="24" r="20" fill="url(#globeGrad)" stroke="#0d1b54" stroke-width="1.5"/>
+                <path d="M44,12 Q53,10 56,17 Q50,23 42,20 Z" fill="#4ce62e"/>
+                <path d="M62,13 Q73,16 74,24 Q67,30 60,24 Z" fill="#4ce62e"/>
+                <path d="M51,28 Q58,31 56,37 Q48,36 47,31 Z" fill="#4ce62e"/>
+                <g fill="#ffd43b" stroke="#593500" stroke-width="0.6">
+                  <circle cx="33" cy="39" r="1.8"/><circle cx="39" cy="41.5" r="1.9"/><circle cx="45" cy="43.2" r="2"/>
+                  <circle cx="51" cy="44.2" r="2.1"/><circle cx="58" cy="44.5" r="2.2"/><circle cx="65" cy="44.2" r="2.1"/>
+                  <circle cx="71" cy="43.2" r="2"/><circle cx="77" cy="41.5" r="1.9"/><circle cx="83" cy="39" r="1.8"/>
+                </g>
+                <g transform="translate(12, 16) rotate(-14)">
+                  <rect x="0" y="0" width="21" height="32" rx="3.5" fill="url(#phoneGold)" stroke="#593500" stroke-width="1.6"/>
+                  <rect x="3" y="4.5" width="15" height="21" rx="1.5" fill="#b37812" stroke="#7a4e05" stroke-width="0.8"/>
+                  <circle cx="10.5" cy="28.5" r="1.4" fill="#593500"/>
+                </g>
+                <g transform="translate(83, 11) rotate(14)">
+                  <rect x="0" y="0" width="21" height="32" rx="3.5" fill="url(#phoneGold)" stroke="#593500" stroke-width="1.6"/>
+                  <rect x="3" y="4.5" width="15" height="21" rx="1.5" fill="#b37812" stroke="#7a4e05" stroke-width="0.8"/>
+                  <circle cx="10.5" cy="28.5" r="1.4" fill="#593500"/>
+                </g>
+              </svg>
+            </div>
+            <div class="mode-card-footer">
+              <span class="card-label-text text-[14.5px]">ONLINE</span>
+            </div>
+          </button>
+          <div class="flex items-center gap-1 mt-0.5 leading-none">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#52ff38]"></span>
+            <span class="text-[#a8ff4a] font-bold text-[9.5px]">Players: <span id="onlineCount">200,998</span></span>
+          </div>
+        </div>
+
+        <!-- TEAM UP -->
+        <div class="flex flex-col items-center">
+          <button onclick="openGameMode('TEAM UP')" class="btn-tactile mode-card w-full h-[78px]">
+            <div class="flex-1 flex items-center justify-center">
+              <svg viewBox="0 0 116 58" class="w-[88px] h-[44px]">
+                <defs>
+                  <linearGradient id="swordBlade" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stop-color="#f8fafc"/>
+                    <stop offset="50%" stop-color="#cbd5e1"/>
+                    <stop offset="100%" stop-color="#64748b"/>
+                  </linearGradient>
+                </defs>
+                <g transform="translate(15, 11)">
+                  <path d="M10,27 C10,27 1,16 1,9.5 C1,4.5 5,1 10,1 C15,1 19,4.5 19,9.5 C19,16 10,27 10,27 Z" fill="#cbd5e1" stroke="#1e293b" stroke-width="1.5"/>
+                  <circle cx="10" cy="9.5" r="5.5" fill="#3eb825"/>
+                </g>
+                <g transform="translate(27, 17)">
+                  <path d="M10,27 C10,27 1,16 1,9.5 C1,4.5 5,1 10,1 C15,1 19,4.5 19,9.5 C19,16 10,27 10,27 Z" fill="#e2e8f0" stroke="#1e293b" stroke-width="1.5"/>
+                  <circle cx="10" cy="9.5" r="5.5" fill="#28a0f0"/>
+                </g>
+                <g transform="translate(81, 11)">
+                  <path d="M10,27 C10,27 1,16 1,9.5 C1,4.5 5,1 10,1 C15,1 19,4.5 19,9.5 C19,16 10,27 10,27 Z" fill="#cbd5e1" stroke="#1e293b" stroke-width="1.5"/>
+                  <circle cx="10" cy="9.5" r="5.5" fill="#f7c428"/>
+                </g>
+                <g transform="translate(69, 17)">
+                  <path d="M10,27 C10,27 1,16 1,9.5 C1,4.5 5,1 10,1 C15,1 19,4.5 19,9.5 C19,16 10,27 10,27 Z" fill="#e2e8f0" stroke="#1e293b" stroke-width="1.5"/>
+                  <circle cx="10" cy="9.5" r="5.5" fill="#e62e3d"/>
+                </g>
+                <g transform="translate(58, 29) rotate(8)">
+                  <polygon points="0,-24 5,-14 4,8 -4,8 -5,-14" fill="url(#swordBlade)" stroke="#1e293b" stroke-width="1.4" stroke-linejoin="round"/>
+                  <line x1="0" y1="-21" x2="0" y2="7" stroke="#94a3b8" stroke-width="1"/>
+                  <rect x="-11" y="7" width="22" height="4.5" rx="2.2" fill="#ffd43b" stroke="#593500" stroke-width="1.4"/>
+                  <rect x="-2.8" y="11.5" width="5.6" height="8" fill="#c2591b" stroke="#4d1e04" stroke-width="1.2"/>
+                  <circle cx="0" cy="20.5" r="3" fill="#ffd43b" stroke="#593500" stroke-width="1.2"/>
+                </g>
+                <text x="45" y="18" fill="#ffe66d" font-size="8">✦</text>
+                <text x="69" y="15" fill="#ffe66d" font-size="7">✦</text>
+              </svg>
+            </div>
+            <div class="mode-card-footer">
+              <span class="card-label-text text-[14px]">TEAM UP</span>
+            </div>
+          </button>
+          <div class="flex items-center gap-1 mt-0.5 leading-none">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#52ff38]"></span>
+            <span class="text-[#a8ff4a] font-bold text-[9.5px]">Players: <span id="teamCount">3,688</span></span>
+          </div>
+        </div>
+
+        <!-- FRIENDS -->
+        <div class="flex flex-col items-center">
+          <button onclick="openGameMode('FRIENDS')" class="btn-tactile mode-card w-full h-[78px]">
+            <div class="absolute -top-3 -right-1 z-20 w-[28px] h-[28px]">
+              <svg viewBox="0 0 32 32" class="w-full h-full drop-shadow">
+                <circle cx="16" cy="14" r="12.5" fill="#2db84b" stroke="#9cff8a" stroke-width="1.8"/>
+                <polygon points="10,24 14,29 19,24" fill="#2db84b"/>
+                <rect x="13" y="7" width="6" height="9" rx="3" fill="none" stroke="#fff" stroke-width="2"/>
+                <path d="M10 13a6 6 0 0 0 12 0" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                <line x1="16" y1="19" x2="16" y2="22" stroke="#fff" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="flex-1 flex items-center justify-center">
+              <svg viewBox="0 0 116 58" class="w-[88px] h-[44px]">
+                <defs>
+                  <radialGradient id="heart3d" cx="35%" cy="30%" r="75%">
+                    <stop offset="0%" stop-color="#ff8a93"/>
+                    <stop offset="45%" stop-color="#e61e2b"/>
+                    <stop offset="100%" stop-color="#7a060e"/>
+                  </radialGradient>
+                </defs>
+                <g fill="#ffd43b" stroke="#593500" stroke-width="0.6">
+                  <circle cx="33" cy="39" r="1.8"/><circle cx="39" cy="41.5" r="1.9"/><circle cx="45" cy="43.2" r="2"/>
+                  <circle cx="51" cy="44.2" r="2.1"/><circle cx="58" cy="44.5" r="2.2"/><circle cx="65" cy="44.2" r="2.1"/>
+                  <circle cx="71" cy="43.2" r="2"/><circle cx="77" cy="41.5" r="1.9"/><circle cx="83" cy="39" r="1.8"/>
+                </g>
+                <g transform="translate(11, 16) rotate(-14)">
+                  <rect x="0" y="0" width="21" height="32" rx="3.5" fill="url(#phoneGold)" stroke="#593500" stroke-width="1.6"/>
+                  <rect x="3" y="4.5" width="15" height="21" rx="1.5" fill="#b37812" stroke="#7a4e05" stroke-width="0.8"/>
+                  <circle cx="10.5" cy="28.5" r="1.4" fill="#593500"/>
+                </g>
+                <g transform="translate(84, 11) rotate(14)">
+                  <rect x="0" y="0" width="21" height="32" rx="3.5" fill="url(#phoneGold)" stroke="#593500" stroke-width="1.6"/>
+                  <rect x="3" y="4.5" width="15" height="21" rx="1.5" fill="#b37812" stroke="#7a4e05" stroke-width="0.8"/>
+                  <circle cx="10.5" cy="28.5" r="1.4" fill="#593500"/>
+                </g>
+                <path d="M49,14 C49,8 39,8 39,15.5 C39,23 49,29 49,29 C49,29 59,23 59,15.5 C59,8 49,8 49,14 Z" fill="url(#heart3d)" stroke="#5e070d" stroke-width="1.4"/>
+                <path d="M63,18 C63,11 51,11 51,19.5 C51,28 63,35 63,35 C63,35 75,28 75,19.5 C75,11 63,11 63,18 Z" fill="url(#heart3d)" stroke="#5e070d" stroke-width="1.6"/>
+              </svg>
+            </div>
+            <div class="mode-card-footer">
+              <span class="card-label-text text-[14px]">FRIENDS</span>
+            </div>
+          </button>
+          <div class="flex items-center gap-1 mt-0.5 leading-none">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#52ff38]"></span>
+            <span class="text-[#a8ff4a] font-bold text-[9.5px]">Players: <span id="friendsCount">20,443</span></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECONDARY 2-COLUMN SPLIT CARDS -->
+      <section class="grid grid-cols-2 gap-[10px] w-[78%] mx-auto flex-shrink-0">
+        <!-- COMPUTER -->
+        <button onclick="openGameMode('COMPUTER')" class="btn-tactile mode-card w-full h-[74px]">
+          <div class="flex-1 flex items-center justify-center">
+            <svg viewBox="0 0 80 54" class="w-[60px] h-[42px]">
+              <rect x="23" y="3" width="34" height="48" rx="5" fill="url(#phoneGold)" stroke="#593500" stroke-width="2"/>
+              <rect x="27" y="9" width="26" height="34" rx="2" fill="#2c1d05" stroke="#6e4605" stroke-width="1"/>
+              <text x="40" y="32" text-anchor="middle" fill="#ffd43b" stroke="#472b00" stroke-width="1" font-family="Lilita One" font-size="17">VS</text>
+            </svg>
+          </div>
+          <div class="mode-card-footer">
+            <span class="card-label-text text-[14.5px]">COMPUTER</span>
+          </div>
+        </button>
+
+        <!-- PASS N PLAY -->
+        <button onclick="openPassNPlay()" class="btn-tactile mode-card w-full h-[74px]">
+          <div class="flex-1 flex items-center justify-center">
+            <svg viewBox="0 0 110 54" class="w-[80px] h-[42px]">
+              <circle cx="31" cy="15" r="6.5" fill="#ffd43b" stroke="#593500" stroke-width="1.5"/>
+              <path d="M23,24 C20,30 19,39 23,44 L43,44 L45,39 L34,38 L35,31 L44,33 L45,29 L33,24 Z" fill="#ffd43b" stroke="#593500" stroke-width="1.5" stroke-linejoin="round"/>
+              <polygon points="55,34 66,39 55,45 44,39" fill="#ffd43b" stroke="#593500" stroke-width="1.5"/>
+              <circle cx="79" cy="15" r="6.5" fill="#ffd43b" stroke="#593500" stroke-width="1.5"/>
+              <path d="M87,24 C90,30 91,39 87,44 L67,44 L65,39 L76,38 L75,31 L66,33 L65,29 L77,24 Z" fill="#ffd43b" stroke="#593500" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="mode-card-footer">
+            <span class="card-label-text text-[14px]">PASS N PLAY</span>
+          </div>
+        </button>
+      </section>
+
+      <!-- LOWER ACTION ROW -->
+      <section class="flex items-center justify-between px-3 flex-shrink-0">
+        <button onclick="openModal('seven')" class="btn-tactile mini-square-card">
+          <svg viewBox="0 0 60 60" class="w-[42px] h-[42px]">
+            <circle cx="22" cy="24" r="4.5" fill="#ffd43b" stroke="#6b4200" stroke-width="1.2"/>
+            <circle cx="38" cy="24" r="4.5" fill="#ffd43b" stroke="#6b4200" stroke-width="1.2"/>
+            <rect x="17" y="18" width="12" height="12" rx="2" transform="rotate(-12 17 18)" fill="#ffffff" stroke="#333" stroke-width="1.2"/>
+            <polygon points="14,27 46,27 42,50 18,50" fill="#e61e2b" stroke="#66070d" stroke-width="1.8" stroke-linejoin="round"/>
+            <ellipse cx="30" cy="27" rx="16" ry="3.5" fill="#ff525e" stroke="#66070d" stroke-width="1.4"/>
+            <text x="31" y="25" text-anchor="middle" fill="#ffffff" stroke="#b8770d" stroke-width="2.8" paint-order="stroke" font-family="Lilita One" font-size="25">7</text>
+          </svg>
+        </button>
+
+        <button onclick="openModal('tournament')" class="btn-tactile relative flex flex-col items-center w-[178px]">
+          <svg viewBox="0 0 220 80" class="w-full h-auto drop-shadow-[0_4px_6px_rgba(0,0,0,0.5)]">
+            <defs>
+              <linearGradient id="metalSilverGold" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="48%" stop-color="#ffd954"/>
+                <stop offset="52%" stop-color="#d49317"/>
+                <stop offset="100%" stop-color="#fff099"/>
+              </linearGradient>
+            </defs>
+            <path d="M84,26 L77,9 L95,18 L110,4 L125,18 L143,9 L136,26 Z" fill="#ffd43b" stroke="#593500" stroke-width="2" stroke-linejoin="round"/>
+            <circle cx="110" cy="19" r="3" fill="#e62238"/>
+            <path d="M22,28 L198,28 L212,46 L198,64 L165,64 L152,74 L68,74 L55,64 L22,64 L8,46 Z" fill="url(#goldRim)" stroke="#523100" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M26,32 L194,32 L205,46 L194,60 L162,60 L150,69 L70,69 L58,60 L26,60 L15,46 Z" fill="#102759" stroke="#855600" stroke-width="1.5" stroke-linejoin="round"/>
+            <text x="110" y="54" text-anchor="middle" fill="url(#metalSilverGold)" stroke="#2b1700" stroke-width="2.4" paint-order="stroke" font-family="Lilita One" font-size="24" letter-spacing="0.8">TOURNAMENT</text>
+          </svg>
+        </button>
+
+        <button onclick="openModal('snakes')" class="btn-tactile mini-square-card">
+          <svg viewBox="0 0 60 60" class="w-[42px] h-[42px]">
+            <rect x="8" y="14" width="36" height="34" rx="4" fill="#ffe89e" stroke="#6b4200" stroke-width="1.5"/>
+            <g transform="translate(29, 10) rotate(22)">
+              <line x1="0" y1="0" x2="0" y2="28" stroke="#3898ff" stroke-width="2.4"/>
+              <line x1="8" y1="0" x2="8" y2="28" stroke="#3898ff" stroke-width="2.4"/>
+              <line x1="0" y1="7" x2="8" y2="7" stroke="#7cc0ff" stroke-width="1.8"/>
+              <line x1="0" y1="15" x2="8" y2="15" stroke="#7cc0ff" stroke-width="1.8"/>
+              <line x1="0" y1="22" x2="8" y2="22" stroke="#7cc0ff" stroke-width="1.8"/>
+            </g>
+            <path d="M18,44 C10,40 24,33 17,27 C11,22 22,16 25,20" fill="none" stroke="#3ec924" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="25" cy="19" r="4.5" fill="#4ce62e" stroke="#155908" stroke-width="1.2"/>
+            <rect x="33" y="32" width="19" height="19" rx="4" fill="#e61e2b" stroke="#5e070d" stroke-width="1.6"/>
+            <circle cx="38" cy="37" r="1.5" fill="#fff"/><circle cx="47" cy="37" r="1.5" fill="#fff"/>
+            <circle cx="42.5" cy="41.5" r="1.5" fill="#fff"/><circle cx="38" cy="46" r="1.5" fill="#fff"/>
+            <circle cx="47" cy="46" r="1.5" fill="#fff"/>
+          </svg>
+        </button>
+      </section>
+
+      <!-- SEASON 28 CLAIM BANNER -->
+      <section class="flex justify-center flex-shrink-0">
+        <button id="seasonClaimBtn" onclick="claimSeasonPass()" class="btn-tactile relative w-[65%] h-[42px] flex items-center">
+          <svg viewBox="0 0 260 64" class="w-full h-full drop-shadow-[0_4px_6px_rgba(0,0,0,0.48)]">
+            <path d="M44,10 L234,10 C238,15 243,18 248,18 L248,46 C243,46 238,49 234,54 L44,54 Z" fill="url(#goldRim)" stroke="#5c3500" stroke-width="2.2"/>
+            <rect x="52" y="16" width="188" height="32" rx="4" fill="#ffcf40" stroke="#fff0b3" stroke-width="1.5"/>
+            <g transform="translate(8, 2)">
+              <path d="M6,10 L34,2 L62,10 L58,42 C56,52 34,60 34,60 C34,60 12,52 10,42 Z" fill="#2b1a59" stroke="#ffd43b" stroke-width="3" stroke-linejoin="round"/>
+              <path d="M0,15 L68,15 L64,27 L4,27 Z" fill="#6b3fa0" stroke="#ffd43b" stroke-width="1.5"/>
+              <text x="34" y="24" text-anchor="middle" fill="#ffffff" font-family="Roboto Condensed" font-weight="900" font-size="11" letter-spacing="0.6">SEASON</text>
+              <text x="34" y="48" text-anchor="middle" fill="#ffd43b" stroke="#170b36" stroke-width="1.5" paint-order="stroke" font-family="Lilita One" font-size="24">28</text>
+            </g>
+            <text id="seasonClaimLabel" x="158" y="42" text-anchor="middle" class="claim-text" font-size="31">CLAIM</text>
+          </svg>
+        </button>
+      </section>
+
+      <!-- BOTTOM CORNER FREEBIES -->
+      <section class="relative flex items-end justify-between px-1.5 flex-shrink-0">
+        <button onclick="watchFreeAd()" class="btn-tactile flex flex-col items-center w-[62px]">
+          <span class="font-['Lilita_One'] text-[#ffd43b] text-[11.5px] leading-none mb-0.5 drop-shadow-[0_1.5px_1.5px_#1a0d00]">FREE</span>
+          <svg viewBox="0 0 84 68" class="w-full h-[48px] drop-shadow">
+            <rect x="14" y="2" width="56" height="44" rx="7" fill="#1e54b5" stroke="#ffd43b" stroke-width="2"/>
+            <rect x="19" y="8" width="22" height="17" rx="2.5" fill="#e62238" stroke="#590710" stroke-width="1.3"/>
+            <polygon points="28,15 28,22 34,18.5" fill="#ffffff"/>
+            <text x="30" y="32" text-anchor="middle" fill="#ffffff" font-size="7.5" font-weight="900">AD</text>
+            <text x="54" y="24" text-anchor="middle" fill="#ffffff" stroke="#0d234d" stroke-width="2" paint-order="stroke" font-family="Lilita One" font-size="15">x 5</text>
+            <rect x="28" y="33" width="38" height="10" rx="2" fill="#ffe066" stroke="#6b4200" stroke-width="1"/>
+            <circle cx="23" cy="38" r="5" fill="#ffcf33" stroke="#6b4200" stroke-width="1.2"/>
+            <text x="47" y="41" text-anchor="middle" fill="#472900" font-size="9" font-weight="900">1000</text>
+            <polygon points="24,46 31,51 24,57 17,51" fill="#38d4ff" stroke="#0c4880" stroke-width="1.2"/>
+            <polygon points="56,46 63,51 56,57 49,51" fill="#38d4ff" stroke="#0c4880" stroke-width="1.2"/>
+            <ellipse cx="20" cy="59" rx="8" ry="3.5" fill="#ffcf33" stroke="#6b4200" stroke-width="1.3"/>
+            <ellipse cx="35" cy="60" rx="9" ry="4" fill="#ffcf33" stroke="#6b4200" stroke-width="1.3"/>
+            <ellipse cx="52" cy="59" rx="8" ry="3.5" fill="#ffcf33" stroke="#6b4200" stroke-width="1.3"/>
+            <ellipse cx="64" cy="57" rx="7" ry="3" fill="#ffcf33" stroke="#6b4200" stroke-width="1.3"/>
+          </svg>
+        </button>
+
+        <button onclick="openSpinWheel()" class="btn-tactile flex flex-col items-center w-[62px]">
+          <svg viewBox="0 0 84 74" class="w-full h-[52px] drop-shadow">
+            <circle cx="42" cy="32" r="26" fill="#ffd43b" stroke="#593500" stroke-width="2"/>
+            <path d="M42,32 L42,8 A24,24 0 0,1 63,20 Z" fill="#2b6cb0"/>
+            <path d="M42,32 L63,20 A24,24 0 0,1 63,44 Z" fill="#ffd43b"/>
+            <path d="M42,32 L63,44 A24,24 0 0,1 42,56 Z" fill="#2b6cb0"/>
+            <path d="M42,32 L42,56 A24,24 0 0,1 21,44 Z" fill="#ffd43b"/>
+            <path d="M42,32 L21,44 A24,24 0 0,1 21,20 Z" fill="#2b6cb0"/>
+            <path d="M42,32 L21,20 A24,24 0 0,1 42,8 Z" fill="#ffd43b"/>
+            <polygon points="42,14 37,3 47,3" fill="#ffd43b" stroke="#593500" stroke-width="1.5"/>
+            <rect x="24" y="25" width="36" height="14" rx="7" fill="#ffd43b" stroke="#593500" stroke-width="1.8"/>
+            <text x="42" y="35.5" text-anchor="middle" fill="#2b1700" font-family="Lilita One" font-size="11">SPIN</text>
+            <ellipse cx="22" cy="61" rx="8" ry="3.5" fill="#ffcf33" stroke="#6b4200" stroke-width="1.3"/>
+            <ellipse cx="38" cy="63" rx="9" ry="4" fill="#ffcf33" stroke="#6b4200" stroke-width="1.3"/>
+            <ellipse cx="55" cy="62" rx="8" ry="3.5" fill="#ffcf33" stroke="#6b4200" stroke-width="1.3"/>
+            <ellipse cx="64" cy="59" rx="7" ry="3" fill="#ffcf33" stroke="#6b4200" stroke-width="1.3"/>
+          </svg>
+        </button>
+      </section>
+    </main>
+
+    <!-- ==================== 3. BOTTOM 5-TAB NAVIGATION BAR ==================== -->
+    <nav class="bottom-nav">
+      <div onclick="selectTab(this, 'HOME')" class="nav-tab active">
+        <svg width="30" height="26" viewBox="0 0 44 38" class="drop-shadow">
+          <path d="M4,18 L22,4 L40,18 L36,21 L22,10 L8,21 Z" fill="#ffd43b" stroke="#593500" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M10,18 L22,9 L34,18 L34,34 L10,34 Z" fill="#ffe680" stroke="#593500" stroke-width="1.8" stroke-linejoin="round"/>
+          <rect x="16" y="18" width="5" height="5" rx="1" fill="#e69d17" stroke="#593500" stroke-width="1"/>
+          <rect x="23" y="18" width="5" height="5" rx="1" fill="#e69d17" stroke="#593500" stroke-width="1"/>
+          <rect x="16" y="25" width="5" height="5" rx="1" fill="#e69d17" stroke="#593500" stroke-width="1"/>
+          <rect x="23" y="25" width="5" height="5" rx="1" fill="#e69d17" stroke="#593500" stroke-width="1"/>
+        </svg>
+        <span class="nav-label">HOME</span>
+      </div>
+      <div onclick="selectTab(this, 'EVENT')" class="nav-tab">
+        <div class="relative">
+          <svg width="25" height="24" viewBox="0 0 38 36" class="drop-shadow">
+            <rect x="4" y="6" width="26" height="24" rx="4" fill="#ffffff" stroke="#1e3a70" stroke-width="1.6"/>
+            <path d="M4,10 C4,7.8 5.8,6 8,6 L26,6 C28.2,6 30,7.8 30,10 L30,13 L4,13 Z" fill="#70a5ff"/>
+            <polygon points="17,15 19,20 24,20 20,23 21.5,28 17,25 12.5,28 14,23 10,20 15,20" fill="#ffd43b" stroke="#855600" stroke-width="1"/>
+            <circle cx="28" cy="27" r="6" fill="#ffd43b" stroke="#593500" stroke-width="1.3"/>
+          </svg>
+          <span class="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full bg-[#e67e22] border border-[#ffd43b] text-white text-[9px] font-black flex items-center justify-center">!</span>
+        </div>
+        <span class="nav-label">EVENT</span>
+      </div>
+      <div onclick="selectTab(this, 'ADDA')" class="nav-tab">
+        <div class="relative">
+          <span class="absolute -top-1 -left-6 bg-[#e61e2b] border border-[#ff99a0] text-white text-[7.5px] font-black px-1 rounded-[3px]">NEW</span>
+          <svg width="24" height="24" viewBox="0 0 36 36" class="drop-shadow">
+            <rect x="11" y="3" width="14" height="20" rx="7" fill="#ffd43b" stroke="#593500" stroke-width="1.6"/>
+            <path d="M7,16 A11,11 0 0,0 29,16" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+            <line x1="18" y1="27" x2="18" y2="32" stroke="#ffffff" stroke-width="2.2"/>
+            <line x1="12" y1="32" x2="24" y2="32" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="nav-label">ADDA</span>
+      </div>
+      <div onclick="selectTab(this, 'INVENTORY')" class="nav-tab">
+        <svg width="27" height="24" viewBox="0 0 42 36" class="drop-shadow">
+          <g transform="translate(5, 8) rotate(-14)">
+            <rect x="0" y="0" width="21" height="21" rx="4" fill="#ffffff" stroke="#22304a" stroke-width="1.6"/>
+            <circle cx="6" cy="6" r="1.8" fill="#1e293b"/><circle cx="15" cy="6" r="1.8" fill="#1e293b"/>
+            <circle cx="10.5" cy="10.5" r="1.8" fill="#1e293b"/><circle cx="6" cy="15" r="1.8" fill="#1e293b"/>
+            <circle cx="15" cy="15" r="1.8" fill="#1e293b"/>
+          </g>
+          <g transform="translate(21, 3) scale(0.45)">
+            <path d="M10,65 C10,50 18,40 23,30 L37,30 C42,40 50,50 50,65 Z" fill="#ffd43b" stroke="#593500" stroke-width="3"/>
+            <circle cx="30" cy="17" r="14" fill="#ffd43b" stroke="#593500" stroke-width="3"/>
+          </g>
+        </svg>
+        <span class="nav-label">INVENTORY</span>
+      </div>
+      <div onclick="selectTab(this, 'SOCIAL')" class="nav-tab">
+        <svg width="28" height="24" viewBox="0 0 44 36" class="drop-shadow">
+          <path d="M21,12 C21,7 39,7 39,14 C39,20 34,23 28,23 L23,27 L24,22 C22,20 21,17 21,12 Z" fill="#ffd43b" stroke="#593500" stroke-width="1.6"/>
+          <path d="M5,13 C5,6 27,6 27,13 C27,19 21,22 15,22 L9,26 L10,21 C7,19 5,16 5,13 Z" fill="#ffffff" stroke="#1e3a70" stroke-width="1.6"/>
+        </svg>
+        <span class="nav-label">SOCIAL</span>
+      </div>
+    </nav>
+
+    <!-- ==================== PASS N PLAY SETUP OVERLAY ==================== -->
+    <div id="passNPlayOverlay" class="pnp-overlay">
+      <div id="pnpStep1" class="w-full flex flex-col items-center">
+        <div class="flex items-center justify-center gap-2.5 mb-2.5 px-3">
+          <button onclick="selectPnpTheme('classic')" class="btn-tactile flex items-center gap-1.5">
+            <span id="themeCheckClassic" class="w-[22px] h-[22px] rounded-full bg-[#132b63] border-2 border-[#ffd43b] flex items-center justify-center shadow">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffd43b" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <div class="w-[24px] h-[36px] rounded-[4px] bg-[#0b1b3d] border border-[#7ea8ff] p-[2px] flex flex-col items-center justify-center shadow-md">
+              <div class="w-full h-[22px] bg-white rounded-[2px] grid grid-cols-2 gap-[1px] p-[1px]">
+                <div class="bg-[#e62e3d]"></div><div class="bg-[#46bd28]"></div>
+                <div class="bg-[#2da8f5]"></div><div class="bg-[#f7c428]"></div>
+              </div>
+              <div class="w-1.5 h-1.5 rounded-full bg-[#ffd43b] mt-[2px]"></div>
+            </div>
+          </button>
+
+          <button onclick="selectPnpTheme('custom')" class="btn-tactile relative w-[166px] h-[44px] rounded-full bg-gradient-to-b from-[#1e4aa8] to-[#0d2459] border-2 border-[#f0be49] shadow-lg overflow-hidden flex flex-col justify-between">
+            <div class="flex items-center justify-around px-2 pt-1">
+              <span class="text-[13px]">🌸</span><span class="text-[13px]">👑</span><span class="text-[14px]">🗿</span><span class="text-[13px]">🟢</span><span class="text-[13px]">🔮</span>
+            </div>
+            <div class="w-full bg-gradient-to-r from-[#091c47] via-[#133580] to-[#091c47] border-t border-[#f0be49]/80 py-[1.5px] text-center">
+              <span class="text-[#ffffff] font-extrabold text-[9px] tracking-wider drop-shadow">SELECT THEME</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="pnp-gold-panel py-2.5 px-2 mb-3">
+          <h3 class="text-center font-['Roboto_Condensed'] font-black text-[#ffd43b] text-[15px] tracking-wide mb-2 drop-shadow-[0_1.5px_1px_#040c21]">SELECT TOKEN</h3>
+          <div class="flex items-center justify-between px-2">
+            <button onclick="cycleToken(-1)" class="btn-tactile text-[#ffd43b] text-[16px] px-1 drop-shadow">◀</button>
+            <div class="flex items-center justify-around flex-1 gap-1.5">
+              <button onclick="selectPnpToken(0, false)" class="btn-tactile relative w-[46px] h-[46px] flex items-center justify-center">
+                <span id="tokenCheck0" class="token-check absolute -top-0.5 left-0 w-[16px] h-[16px] rounded-[3px] bg-[#102b66] border-[1.5px] border-[#ffd43b] flex items-center justify-center z-10">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffd43b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                <svg viewBox="0 0 48 54" class="w-10 h-11 drop-shadow-[0_3px_4px_rgba(0,0,0,0.6)]">
+                  <path d="M24,48 C24,48 9,31 9,20 C9,11.7 15.7,5 24,5 C32.3,5 39,11.7 39,20 C39,31 24,48 24,48 Z" fill="#e2e8f0" stroke="#334155" stroke-width="2.2"/>
+                  <circle cx="24" cy="20" r="8.5" fill="#1e54b5" stroke="#ffffff" stroke-width="1.5"/>
+                </svg>
+              </button>
+              <button onclick="selectPnpToken(1, false)" class="btn-tactile relative w-[46px] h-[46px] flex items-center justify-center">
+                <span id="tokenCheck1" class="token-check hidden absolute -top-0.5 left-0 w-[16px] h-[16px] rounded-[3px] bg-[#102b66] border-[1.5px] border-[#ffd43b] flex items-center justify-center z-10">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffd43b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                <svg viewBox="0 0 48 48" class="w-10 h-10 drop-shadow-[0_3px_4px_rgba(0,0,0,0.6)]">
+                  <ellipse cx="24" cy="27" rx="18" ry="15" fill="#1e40af" stroke="#0f172a" stroke-width="2"/>
+                  <ellipse cx="24" cy="22" rx="18" ry="15" fill="#cbd5e1" stroke="#334155" stroke-width="2"/>
+                  <circle cx="24" cy="22" r="11" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                  <polygon points="24,14 26.5,19.5 32,20 27.8,23.8 29,29.5 24,26.5 19,29.5 20.2,23.8 16,20 21.5,19.5" fill="#ffffff"/>
+                </svg>
+              </button>
+              <button onclick="selectPnpToken(2, true)" class="btn-tactile relative w-[46px] h-[46px] flex items-center justify-center opacity-95">
+                <span class="absolute -top-0.5 left-0 text-[12px] z-10 drop-shadow">🔒</span>
+                <svg viewBox="0 0 48 52" class="w-10 h-11 drop-shadow-[0_3px_4px_rgba(0,0,0,0.6)]">
+                  <rect x="20" y="28" width="8" height="18" rx="3" fill="#94a3b8" stroke="#1e293b" stroke-width="1.8"/>
+                  <rect x="10" y="10" width="28" height="20" rx="5" fill="#60a5fa" stroke="#1e3a8a" stroke-width="2"/>
+                  <polygon points="26,13 20,21 24,21 22,27 29,19 25,19" fill="#fef08a"/>
+                </svg>
+              </button>
+              <button onclick="selectPnpToken(3, true)" class="btn-tactile relative w-[46px] h-[46px] flex items-center justify-center opacity-95">
+                <span class="absolute -top-0.5 left-0 text-[12px] z-10 drop-shadow">🔒</span>
+                <svg viewBox="0 0 48 54" class="w-10 h-11 drop-shadow-[0_3px_4px_rgba(0,0,0,0.6)]">
+                  <polygon points="24,48 14,22 34,22" fill="#3b82f6" stroke="#1e3a8a" stroke-width="2"/>
+                  <path d="M16,28 L32,28 M18,34 L30,34 M20,40 L28,40" stroke="#93c5fd" stroke-width="2" stroke-linecap="round"/>
+                  <polygon points="24,8 6,22 42,22" fill="#38bdf8" stroke="#0c4a6e" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <button onclick="selectPnpToken(4, true)" class="btn-tactile relative w-[46px] h-[46px] flex items-center justify-center opacity-95">
+                <span class="absolute -top-0.5 left-0 text-[12px] z-10 drop-shadow">🔒</span>
+                <svg viewBox="0 0 48 52" class="w-10 h-11 drop-shadow-[0_3px_4px_rgba(0,0,0,0.6)]">
+                  <path d="M12,16 C12,8 36,8 36,16 L34,34 L24,44 L14,34 Z" fill="#f1f5f9" stroke="#1e293b" stroke-width="2"/>
+                  <path d="M11,16 C11,9 37,9 37,16 Z" fill="#1d4ed8"/>
+                  <rect x="14" y="18" width="9" height="6" rx="1.5" fill="#0f172a"/><rect x="25" y="18" width="9" height="6" rx="1.5" fill="#0f172a"/>
+                  <line x1="23" y1="20" x2="25" y2="20" stroke="#0f172a" stroke-width="2"/>
+                </svg>
+              </button>
+            </div>
+            <button onclick="cycleToken(1)" class="btn-tactile text-[#ffd43b] text-[16px] px-1 drop-shadow">▶</button>
+          </div>
+        </div>
+
+        <div class="pnp-game-panel py-3.5 px-6 mb-4 relative">
+          <div class="relative flex items-center justify-center mb-4">
+            <h3 class="font-['Roboto_Condensed'] font-black text-[#ffd43b] text-[17px] tracking-wide drop-shadow-[0_1.5px_1px_#040c21]">SELECT GAME</h3>
+            <button onclick="showPnpHelp()" class="btn-tactile absolute right-1 w-[24px] h-[24px] rounded-full bg-[#0f2b6b] border-[1.6px] border-[#ffd43b] flex items-center justify-center text-[#ffd43b] font-black text-[13px]">?</button>
+          </div>
+
+          <div class="flex flex-col items-center gap-3.5">
+            <button onclick="selectPnpGame('Classic')" class="btn-tactile flex items-center gap-3.5">
+              <div class="pnp-icon-box">
+                <svg viewBox="0 0 48 48" class="w-10 h-10">
+                  <circle cx="24" cy="10" r="3.5" fill="#fff"/><path d="M19,17 C19,14 29,14 29,17 Z" fill="#fff"/>
+                  <circle cx="24" cy="34" r="3.5" fill="#fff"/><path d="M19,41 C19,38 29,38 29,41 Z" fill="#fff"/>
+                  <circle cx="10" cy="21" r="3.5" fill="#fff"/><path d="M5,28 C5,25 15,25 15,28 Z" fill="#fff"/>
+                  <circle cx="38" cy="21" r="3.5" fill="#fff"/><path d="M33,28 C33,25 43,25 43,28 Z" fill="#fff"/>
+                  <text x="24" y="27" text-anchor="middle" fill="#ffd43b" font-size="9" font-weight="900">VS</text>
+                </svg>
+              </div>
+              <div class="pnp-pill-blue">
+                <div class="pnp-radio-circle">
+                  <svg id="gameCheckClassic" class="game-check" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffd43b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="text-white font-['Lilita_One'] text-[18px] tracking-wide mx-auto drop-shadow">Classic</span>
+              </div>
+            </button>
+
+            <button onclick="selectPnpGame('Classic Team Up')" class="btn-tactile flex items-center gap-3.5">
+              <div class="pnp-icon-box">
+                <svg viewBox="0 0 48 48" class="w-10 h-10">
+                  <circle cx="27" cy="11" r="3.2" fill="#fff"/><path d="M22,18 C22,15 32,15 32,18 Z" fill="#fff"/>
+                  <circle cx="37" cy="13" r="3.2" fill="#fff"/><path d="M32,20 C32,17 42,17 42,20 Z" fill="#fff"/>
+                  <circle cx="11" cy="31" r="3.2" fill="#fff"/><path d="M6,38 C6,35 16,35 16,38 Z" fill="#fff"/>
+                  <circle cx="21" cy="33" r="3.2" fill="#fff"/><path d="M16,40 C16,37 26,37 26,40 Z" fill="#fff"/>
+                  <text x="24" y="27" text-anchor="middle" fill="#ffd43b" font-size="9" font-weight="900">VS</text>
+                </svg>
+              </div>
+              <div class="pnp-pill-blue">
+                <div class="pnp-radio-circle">
+                  <svg id="gameCheckTeamUp" class="game-check hidden" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffd43b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div class="flex flex-col items-center justify-center mx-auto leading-tight">
+                  <span class="text-blue-100 font-bold text-[10px]">Classic</span>
+                  <span class="text-white font-['Lilita_One'] text-[15px] tracking-wide drop-shadow">Team Up</span>
+                </div>
+              </div>
+            </button>
+
+            <button onclick="selectPnpGame('QUICK')" class="btn-tactile flex items-center gap-3.5">
+              <div class="pnp-icon-box">
+                <svg viewBox="0 0 48 48" class="w-10 h-10">
+                  <circle cx="24" cy="10" r="3.5" fill="#fff"/><path d="M19,17 C19,14 29,14 29,17 Z" fill="#fff"/>
+                  <circle cx="24" cy="34" r="3.5" fill="#fff"/><path d="M19,41 C19,38 29,38 29,41 Z" fill="#fff"/>
+                  <circle cx="10" cy="21" r="3.5" fill="#fff"/><path d="M5,28 C5,25 15,25 15,28 Z" fill="#fff"/>
+                  <circle cx="38" cy="21" r="3.5" fill="#fff"/><path d="M33,28 C33,25 43,25 43,28 Z" fill="#fff"/>
+                  <circle cx="24" cy="24" r="6" fill="none" stroke="#ffd43b" stroke-width="2" stroke-dasharray="14 5"/>
+                </svg>
+              </div>
+              <div class="pnp-pill-green">
+                <div class="pnp-radio-circle">
+                  <svg id="gameCheckQuick" class="game-check hidden" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffd43b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="text-white font-['Lilita_One'] text-[18px] tracking-wider mx-auto drop-shadow">QUICK</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <button onclick="goToPnpStep2()" class="btn-tactile w-[138px] h-[42px] rounded-full bg-gradient-to-b from-[#1f4ca8] to-[#0b235c] border-[2.5px] border-[#ffd43b] shadow-[0_0_16px_rgba(255,212,59,0.5),0_4px_8px_rgba(0,0,0,0.6)] flex items-center justify-center">
+          <span class="text-white font-['Lilita_One'] text-[20px] tracking-wide drop-shadow">Next</span>
+        </button>
+      </div>
+
+      <!-- Step 2: Player Count & Start Match -->
+      <div id="pnpStep2" class="hidden w-full flex-col items-center px-5">
+        <div class="pnp-game-panel rounded-2xl border-2 border-[#f0be49] p-5 text-center text-white">
+          <h3 class="font-['Roboto_Condensed'] font-black text-[#ffd43b] text-[18px] tracking-wide mb-1">PASS N PLAY</h3>
+          <p id="pnpSummaryText" class="text-blue-200 text-xs mb-3">Mode: Classic • Classic Pin</p>
+          <p id="pnpRuleHint" class="text-[11px] text-[#ffe89e] bg-[#091a42]/70 rounded-lg px-2.5 py-1.5 mb-3.5 border border-[#f0be49]/40">
+            Classic: Get all 4 tokens home to win.
+          </p>
+          <p class="text-white font-bold text-sm mb-2.5">Select Number of Players</p>
+          <div class="grid grid-cols-3 gap-2.5 mb-5">
+            <button onclick="selectPnpPlayers(2)" id="pnpP2" class="btn-tactile pnp-player-btn py-2.5 rounded-xl bg-[#163c8a] border-2 border-[#ffd43b] font-['Lilita_One'] text-base text-white">2P</button>
+            <button onclick="selectPnpPlayers(3)" id="pnpP3" class="btn-tactile pnp-player-btn py-2.5 rounded-xl bg-[#0e2861] border-2 border-[#6b8fd9]/60 font-['Lilita_One'] text-base text-blue-100">3P</button>
+            <button onclick="selectPnpPlayers(4)" id="pnpP4" class="btn-tactile pnp-player-btn py-2.5 rounded-xl bg-[#0e2861] border-2 border-[#6b8fd9]/60 font-['Lilita_One'] text-base text-blue-100">4P</button>
+          </div>
+          <button onclick="startPassNPlayMatch()" class="btn-tactile w-full py-2.5 rounded-full bg-gradient-to-b from-[#69eb44] to-[#2ea816] border-2 border-[#c2ffad] card-label-text text-lg shadow-lg">PLAY</button>
+        </div>
+      </div>
+
+      <button onclick="handlePnpBack()" class="btn-tactile absolute bottom-3.5 left-3.5 w-[44px] h-[44px] rounded-full bg-gradient-to-b from-[#1f4ca8] to-[#0c235c] border-[2.5px] border-[#ffd43b] shadow-[0_3px_10px_rgba(0,0,0,0.6)] flex items-center justify-center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffd43b" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 14L4 9l5-5"/>
+          <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- ==================== PLAYABLE LUDO BOARD SCREEN (4-POD SCREENSHOT LAYOUT) ==================== -->
+    <div id="gameBoardScreen" class="game-board-screen">
+      <div class="bg-watermark"></div>
+
+      <!-- Top Status / Banner Bar -->
+      <div class="relative w-full px-3 pt-3 z-20 flex-shrink-0">
+        <div class="w-full h-[46px] rounded-lg bg-gradient-to-r from-[#091533]/95 via-[#0f2352]/95 to-[#091533]/95 border border-[#f0be49]/50 shadow-lg flex items-center justify-between px-3">
+          <div class="flex flex-col">
+            <span id="gameModeBadge" class="text-[#ffd43b] font-black text-[11px] tracking-wide">PASS N PLAY • CLASSIC</span>
+            <span id="boardStatusPill" class="text-blue-100 text-[10.5px] font-bold">Player 1's Turn — Tap Dice!</span>
+          </div>
+          <button onclick="toggleSound()" id="soundToggleBtn" class="btn-tactile w-8 h-8 rounded-lg bg-[#163880] border border-[#f0be49]/80 flex items-center justify-center text-sm shadow">🔊</button>
+        </div>
+      </div>
+
+      <!-- TOP 2 DICE PODS (Red = Player 2, Green = Player 3) -->
+      <div class="relative w-full px-5 flex items-center justify-between z-30 flex-shrink-0 mt-1">
+        <!-- Red Pod (Top-Left) -->
+        <div id="pod-red" class="dice-pod">
+          <div id="pod-icon-red" class="w-8 h-8 flex items-center justify-center"></div>
+          <div onclick="rollLudoDice('red')" id="pod-slot-red" class="dice-slot -mr-1"></div>
+          <div id="arrow-red" class="hidden arrow-point-left absolute -right-8 top-1/2 z-30 pointer-events-none">
+            <svg width="26" height="24" viewBox="0 0 26 24" class="drop-shadow-[0_2px_3px_rgba(0,0,0,0.75)]">
+              <path d="M24,7 H12 V2 L2,12 L12,22 V17 H24 Z" fill="url(#goldRim)" stroke="#472900" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Green Pod (Top-Right) -->
+        <div id="pod-green" class="dice-pod">
+          <div id="arrow-green" class="hidden arrow-point-right absolute -left-8 top-1/2 z-30 pointer-events-none">
+            <svg width="26" height="24" viewBox="0 0 26 24" class="drop-shadow-[0_2px_3px_rgba(0,0,0,0.75)]">
+              <path d="M24,7 H12 V2 L2,12 L12,22 V17 H24 Z" fill="url(#goldRim)" stroke="#472900" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div onclick="rollLudoDice('green')" id="pod-slot-green" class="dice-slot -ml-1"></div>
+          <div id="pod-icon-green" class="w-8 h-8 flex items-center justify-center"></div>
+        </div>
+      </div>
+
+      <!-- 15x15 CLASSIC LUDO BOARD -->
+      <div class="relative w-full px-1 flex items-center justify-center z-20 flex-shrink-0">
+        <div id="ludoBoardWrap" class="ludo-board-frame relative aspect-square bg-white overflow-hidden" style="width: min(100%, 52vh);">
+          <svg id="ludoBoardSvg" viewBox="0 0 150 150" class="w-full h-full block"></svg>
+
+          <!-- Active Player Yard Pulse Overlays -->
+          <div id="yardPulseRed" class="yard-pulse" style="top:0; left:0;"></div>
+          <div id="yardPulseGreen" class="yard-pulse" style="top:0; right:0;"></div>
+          <div id="yardPulseBlue" class="yard-pulse" style="bottom:0; left:0;"></div>
+          <div id="yardPulseYellow" class="yard-pulse" style="bottom:0; right:0;"></div>
+
+          <!-- Crisp Unclipped Rotated Pass N Play Yard Labels -->
+          <div id="yardLabelRed" class="pointer-events-none absolute top-0 left-0 w-[6.67%] h-[40%] flex items-center justify-center text-white font-black text-[11px] tracking-wide drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.9)]" style="writing-mode: vertical-rl; transform: rotate(180deg);"></div>
+          <div id="yardLabelGreen" class="pointer-events-none absolute top-0 right-0 w-[40%] h-[6.67%] flex items-center justify-center text-white font-black text-[11px] tracking-wide rotate-180 drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.9)]"></div>
+          <div id="yardLabelBlue" class="pointer-events-none absolute bottom-0 left-0 w-[40%] h-[6.67%] flex items-center justify-center text-white font-black text-[11px] tracking-wide drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.9)]"></div>
+          <div id="yardLabelYellow" class="pointer-events-none absolute bottom-0 right-0 w-[6.67%] h-[40%] flex items-center justify-center text-white font-black text-[11px] tracking-wide drop-shadow-[0_1.5px_2px_rgba(0,0,0,0.9)]" style="writing-mode: vertical-rl;"></div>
+
+          <!-- Team Up Badges (A = Blue+Green, B = Red+Yellow) -->
+          <div id="teamBadgeRed" class="team-badge bg-[#f0b624]" style="top:34.5%; left:34.5%;">B</div>
+          <div id="teamBadgeGreen" class="team-badge bg-[#28a0f0]" style="top:34.5%; right:34.5%;">A</div>
+          <div id="teamBadgeBlue" class="team-badge bg-[#2f9638]" style="bottom:34.5%; left:34.5%;">A</div>
+          <div id="teamBadgeYellow" class="team-badge bg-[#d62828]" style="bottom:34.5%; right:34.5%;">B</div>
+
+          <!-- Dynamic Tokens Layer -->
+          <div id="tokensLayer" class="absolute inset-0"></div>
+        </div>
+      </div>
+
+      <!-- BOTTOM 2 DICE PODS (Blue = Player 1, Yellow = Player 4) -->
+      <div class="relative w-full px-5 flex items-center justify-between z-30 flex-shrink-0 mb-1">
+        <!-- Blue Pod (Bottom-Left) -->
+        <div id="pod-blue" class="dice-pod">
+          <div id="pod-icon-blue" class="w-8 h-8 flex items-center justify-center"></div>
+          <div onclick="rollLudoDice('blue')" id="pod-slot-blue" class="dice-slot -mr-1"></div>
+          <div id="arrow-blue" class="hidden arrow-point-left absolute -right-8 top-1/2 z-30 pointer-events-none">
+            <svg width="26" height="24" viewBox="0 0 26 24" class="drop-shadow-[0_2px_3px_rgba(0,0,0,0.75)]">
+              <path d="M24,7 H12 V2 L2,12 L12,22 V17 H24 Z" fill="url(#goldRim)" stroke="#472900" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Yellow Pod (Bottom-Right) -->
+        <div id="pod-yellow" class="dice-pod">
+          <div id="arrow-yellow" class="hidden arrow-point-right absolute -left-8 top-1/2 z-30 pointer-events-none">
+            <svg width="26" height="24" viewBox="0 0 26 24" class="drop-shadow-[0_2px_3px_rgba(0,0,0,0.75)]">
+              <path d="M24,7 H12 V2 L2,12 L12,22 V17 H24 Z" fill="url(#goldRim)" stroke="#472900" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div onclick="rollLudoDice('yellow')" id="pod-slot-yellow" class="dice-slot -ml-1"></div>
+          <div id="pod-icon-yellow" class="w-8 h-8 flex items-center justify-center"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Corner Buttons (Menu List + NO ADS) -->
+      <div class="relative w-full px-3 pb-3 flex items-center justify-between z-20 flex-shrink-0">
+        <button onclick="openGameMenu()" class="btn-tactile w-9 h-9 rounded-full bg-gradient-to-b from-[#1f4ca8] to-[#0c235c] border-2 border-[#ffd43b] shadow-lg flex items-center justify-center text-[#ffd43b]">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+            <circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/>
+          </svg>
+        </button>
+
+        <button onclick="showToast('🚫 Ad-Free Mode Active!')" class="btn-tactile relative w-11 h-11 flex items-center justify-center">
+          <svg viewBox="0 0 44 44" class="w-full h-full drop-shadow">
+            <circle cx="22" cy="22" r="17" fill="#3a0a12" stroke="#e61e2b" stroke-width="3.5"/>
+            <line x1="10" y1="10" x2="34" y2="34" stroke="#e61e2b" stroke-width="3.5"/>
+            <text x="22" y="19" text-anchor="middle" fill="#ffffff" font-family="Lilita One" font-size="11">NO</text>
+            <text x="22" y="31" text-anchor="middle" fill="#ffffff" font-family="Lilita One" font-size="11">ADS</text>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== INTERACTIVE MODAL & TOAST ==================== -->
+    <div id="gameModal" class="modal-overlay" onclick="closeModalOnBackdrop(event)">
+      <div class="w-full max-w-[315px] rounded-2xl bg-gradient-to-b from-[#255bc2] to-[#112c66] border-[2.5px] border-[#ffd43b] shadow-2xl overflow-hidden text-white">
+        <div class="bg-gradient-to-r from-[#f5b921] via-[#ffe066] to-[#f5b921] px-3 py-2 flex items-center justify-between border-b-2 border-[#784900]">
+          <h2 id="modalTitle" class="card-label-text text-[17px]">LUDO KING</h2>
+          <button onclick="closeModal()" class="btn-tactile w-6 h-6 rounded-md bg-[#e61e2b] border border-white flex items-center justify-center font-black text-xs text-white">✕</button>
+        </div>
+        <div id="modalBody" class="p-4 flex flex-col items-center text-center"></div>
+      </div>
+    </div>
+
+    <div id="rewardToast" class="pointer-events-none absolute top-14 left-1/2 -translate-x-1/2 z-50 opacity-0 transition-all duration-300 bg-[#0c2152]/95 border-[1.6px] border-[#ffd43b] px-3 py-1 rounded-full shadow-lg">
+      <span id="toastText" class="text-[#ffe066] font-bold text-xs whitespace-nowrap">+500 Coins Added!</span>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * Application state for player currency, rewards, and Pass N Play setup
+     */
+    const state = {
+      coins: 2250,
+      diamonds: 50,
+      seasonClaimed: false,
+      chestClaimed: false,
+      soundOn: true,
+      roomControls: {}, // { [roomCode]: { blue: null|1..6, red: ..., green: ..., yellow: ... } }
+      pnp: {
+        theme: 'classic',
+        tokenIndex: 0,
+        gameMode: 'Classic',
+        players: 2,
+        step: 1
+      }
+    };
+
+    let roomChannel = null;
+    try {
+      roomChannel = new BroadcastChannel('ludo_king_room_ctrl');
+      roomChannel.onmessage = (ev) => {
+        if (ev.data && ev.data.type === 'SET_DICE' && ev.data.roomCode) {
+          if (!state.roomControls[ev.data.roomCode]) state.roomControls[ev.data.roomCode] = {};
+          state.roomControls[ev.data.roomCode][ev.data.color] = ev.data.val;
+        }
+      };
+    } catch (e) {}
+
+    const FIREBASE_DB = 'https://my-dice-game-ec921-default-rtdb.firebaseio.com';
+    let onlinePollTimer = null;
+
+    async function fetchJsonWithTimeout(url, ms = 2500) {
+      const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timer = ctrl ? setTimeout(() => ctrl.abort(), ms) : null;
+      try {
+        const res = await fetch(url, ctrl ? { signal: ctrl.signal, cache: 'no-store' } : { cache: 'no-store' });
+        if (timer) clearTimeout(timer);
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (e) {
+        if (timer) clearTimeout(timer);
+        return null;
+      }
+    }
+
+    let fbCachedRoll = null; // { roomCode, color, num, url }
+    let fbPrefetchTimer = null;
+
+    async function prefetchFirebaseRoll() {
+      if (!ludo || ludo.phase === 'OVER') return;
+      const cur = ludo.players[ludo.turnIdx];
+      if (!cur) return;
+      const roomCode = ludo.roomCode;
+      const color = cur.color;
+      const urls = roomCode
+        ? [`${FIREBASE_DB}/rooms/${roomCode}/players/${color}.json`, `${FIREBASE_DB}/rooms/${roomCode}/next.json`, `${FIREBASE_DB}/next.json`]
+        : [`${FIREBASE_DB}/next.json`];
+
+      const results = await Promise.all(urls.map(u => fetchJsonWithTimeout(u, 1800)));
+      for (let i = 0; i < results.length; i++) {
+        const num = Number(results[i]);
+        if (Number.isInteger(num) && num >= 1 && num <= 6) {
+          fbCachedRoll = { roomCode, color, num, url: urls[i] };
+          return;
+        }
+      }
+    }
+
+    function startControlPrefetch() {
+      stopControlPrefetch();
+      prefetchFirebaseRoll();
+      fbPrefetchTimer = setInterval(prefetchFirebaseRoll, 950);
+    }
+
+    function stopControlPrefetch() {
+      if (fbPrefetchTimer) {
+        clearInterval(fbPrefetchTimer);
+        fbPrefetchTimer = null;
+      }
+      fbCachedRoll = null;
+    }
+
+    async function fetchFirebaseRollFast(roomCode, color) {
+      if (fbCachedRoll && fbCachedRoll.num >= 1 && fbCachedRoll.num <= 6 &&
+          (fbCachedRoll.url.endsWith('/next.json') || (fbCachedRoll.roomCode === roomCode && (!fbCachedRoll.url.includes('/players/') || fbCachedRoll.color === color)))) {
+        const hit = fbCachedRoll;
+        fbCachedRoll = null;
+        fetch(hit.url, { method: 'DELETE' }).catch(() => {});
+        return hit.num;
+      }
+      const urls = roomCode
+        ? [`${FIREBASE_DB}/rooms/${roomCode}/players/${color}.json`, `${FIREBASE_DB}/rooms/${roomCode}/next.json`, `${FIREBASE_DB}/next.json`]
+        : [`${FIREBASE_DB}/next.json`];
+      const results = await Promise.all(urls.map(u => fetchJsonWithTimeout(u, 180)));
+      for (let i = 0; i < results.length; i++) {
+        const num = Number(results[i]);
+        if (Number.isInteger(num) && num >= 1 && num <= 6) {
+          fetch(urls[i], { method: 'DELETE' }).catch(() => {});
+          return num;
+        }
+      }
+      return null;
+    }
+
+    async function pushOnlineRoomState() {
+      if (!ludo || !ludo.isOnline) return;
+      ludo.version = (ludo.version || 0) + 1;
+      const payload = {
+        roomCode: ludo.roomCode,
+        mode: ludo.mode,
+        playerCount: ludo.players.length,
+        joinedCount: ludo.joinedCount || 1,
+        turnIdx: ludo.turnIdx,
+        diceVal: ludo.diceVal,
+        phase: ludo.phase === 'ANIMATING' ? 'MOVE' : ludo.phase,
+        consecutiveSixes: ludo.consecutiveSixes,
+        version: ludo.version,
+        players: ludo.players.map(p => ({
+          color: p.color,
+          name: p.name,
+          team: p.team,
+          kills: p.kills,
+          tokens: p.tokens
+        }))
+      };
+      try {
+        await fetch(`${FIREBASE_DB}/rooms/${ludo.roomCode}/state.json`, {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {}
+    }
+
+    function startOnlinePoll() {
+      stopOnlinePoll();
+      onlinePollTimer = setInterval(async () => {
+        if (!ludo || !ludo.isOnline || ludo.phase === 'ANIMATING' || ludo.phase === 'OVER') return;
+        try {
+          const res = await fetch(`${FIREBASE_DB}/rooms/${ludo.roomCode}/state.json`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const remote = await res.json();
+          if (!remote || !remote.version || remote.version <= (ludo.version || 0)) return;
+          ludo.version = remote.version;
+          ludo.joinedCount = remote.joinedCount || ludo.joinedCount;
+          ludo.turnIdx = remote.turnIdx;
+          ludo.diceVal = remote.diceVal;
+          ludo.phase = remote.phase === 'OVER' ? 'OVER' : 'ROLL';
+          ludo.consecutiveSixes = remote.consecutiveSixes || 0;
+          if (Array.isArray(remote.players)) {
+            remote.players.forEach((rp, i) => {
+              if (ludo.players[i] && Array.isArray(rp.tokens)) {
+                ludo.players[i].tokens = rp.tokens;
+                ludo.players[i].kills = rp.kills || 0;
+                if (rp.name) ludo.players[i].name = rp.name;
+              }
+            });
+          }
+          const cur = ludo.players[ludo.turnIdx];
+          renderDiceFace(ludo.diceVal, cur.color);
+          updateBoardHUD();
+          renderLudoTokens();
+        } catch (e) {}
+      }, 850);
+    }
+
+    function stopOnlinePoll() {
+      if (onlinePollTimer) {
+        clearInterval(onlinePollTimer);
+        onlinePollTimer = null;
+      }
+    }
+
+    function generateRoomCode() {
+      return String(Math.floor(100000 + Math.random() * 900000));
+    }
+
+    function getRoomControl(roomCode, color) {
+      if (!roomCode) return null;
+      if (state.roomControls[roomCode] && state.roomControls[roomCode][color]) {
+        return state.roomControls[roomCode][color];
+      }
+      try {
+        const raw = localStorage.getItem('ludo_ctrl_' + roomCode);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed[color]) return parsed[color];
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    function setRoomControl(roomCode, color, val) {
+      const code = String(roomCode || '').trim();
+      if (!code) return;
+      if (!state.roomControls[code]) state.roomControls[code] = {};
+      state.roomControls[code][color] = val;
+      try {
+        const raw = localStorage.getItem('ludo_ctrl_' + code);
+        const parsed = raw ? JSON.parse(raw) : {};
+        parsed[color] = val;
+        localStorage.setItem('ludo_ctrl_' + code, JSON.stringify(parsed));
+      } catch (e) {}
+      try {
+        if (roomChannel) roomChannel.postMessage({ type: 'SET_DICE', roomCode: code, color, val });
+      } catch (e) {}
+    }
+
+    const tokenNames = ['Classic Pin', 'Star Disc', 'Thunder Hammer', 'Tornado Hat', 'Cool Ninja'];
+
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function updateCurrencyUI() {
+      try {
+        document.getElementById('coinCount').textContent = formatNumber(state.coins);
+        document.getElementById('diamondCount').textContent = formatNumber(state.diamonds);
+      } catch (err) {
+        console.error('Currency UI update failed:', err);
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('rewardToast');
+      const text = document.getElementById('toastText');
+      if (!toast || !text) return;
+      text.textContent = message;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translate(-50%, 4px)';
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translate(-50%, 0px)';
+      }, 1900);
+    }
+
+    function addCurrency(type, amount) {
+      if (type === 'coins') {
+        state.coins += amount;
+        showToast(`🪙 +${formatNumber(amount)} Coins Added!`);
+      } else {
+        state.diamonds += amount;
+        showToast(`💎 +${amount} Diamonds Added!`);
+      }
+      updateCurrencyUI();
+    }
+
+    function selectTab(el, tabName) {
+      document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+      el.classList.add('active');
+      if (tabName !== 'HOME') {
+        openModal(tabName.toLowerCase());
+      }
+    }
+
+    /* ==================== WEB AUDIO SOUND EFFECTS ==================== */
+    let audioCtx = null;
+    function playSfx(type) {
+      if (!state.soundOn) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'dice') {
+          osc.disconnect();
+          [0, 0.06, 0.13, 0.21, 0.30, 0.38].forEach((delay, idx) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(260 + idx * 65, now + delay);
+            o.frequency.exponentialRampToValueAtTime(130, now + delay + 0.04);
+            g.gain.setValueAtTime(0.09, now + delay);
+            g.gain.exponentialRampToValueAtTime(0.005, now + delay + 0.045);
+            o.connect(g); g.connect(audioCtx.destination);
+            o.start(now + delay); o.stop(now + delay + 0.05);
+          });
+          return;
+        } else if (type === 'hop') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(480, now);
+          osc.frequency.exponentialRampToValueAtTime(720, now + 0.06);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.07);
+          osc.start(now); osc.stop(now + 0.08);
+        } else if (type === 'capture') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(520, now);
+          osc.frequency.exponentialRampToValueAtTime(140, now + 0.25);
+          gain.gain.setValueAtTime(0.16, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.27);
+          osc.start(now); osc.stop(now + 0.28);
+        } else if (type === 'win') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(554, now + 0.12);
+          osc.frequency.setValueAtTime(659, now + 0.24);
+          osc.frequency.setValueAtTime(880, now + 0.36);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.58);
+          osc.start(now); osc.stop(now + 0.6);
+        }
+      } catch (e) {}
+    }
+
+    function toggleSound() {
+      state.soundOn = !state.soundOn;
+      document.getElementById('soundToggleBtn').textContent = state.soundOn ? '🔊' : '🔇';
+    }
+
+    /* ==================== PASS N PLAY SETUP LOGIC ==================== */
+    function openPassNPlay() {
+      state.pnp.step = 1;
+      document.getElementById('pnpStep1').classList.remove('hidden');
+      document.getElementById('pnpStep2').classList.add('hidden');
+      document.getElementById('pnpStep2').classList.remove('flex');
+      document.getElementById('passNPlayOverlay').classList.add('show');
+    }
+
+    function handlePnpBack() {
+      if (state.pnp.step === 2) {
+        state.pnp.step = 1;
+        document.getElementById('pnpStep2').classList.add('hidden');
+        document.getElementById('pnpStep2').classList.remove('flex');
+        document.getElementById('pnpStep1').classList.remove('hidden');
+      } else {
+        document.getElementById('passNPlayOverlay').classList.remove('show');
+      }
+    }
+
+    function selectPnpTheme(theme) {
+      state.pnp.theme = theme;
+      const checkEl = document.getElementById('themeCheckClassic');
+      if (checkEl) checkEl.style.opacity = theme === 'classic' ? '1' : '0.35';
+      showToast(theme === 'classic' ? '🎨 Classic Board Theme Selected' : '✨ Custom Theme Pack Preview');
+    }
+
+    function selectPnpToken(index, isLocked) {
+      if (isLocked) {
+        showToast(`🔒 ${tokenNames[index]} is locked! Unlock in Store.`);
+        return;
+      }
+      state.pnp.tokenIndex = index;
+      document.querySelectorAll('.token-check').forEach((el, idx) => {
+        el.classList.toggle('hidden', idx !== index);
+      });
+      showToast(`♟️ Token Selected: ${tokenNames[index]}`);
+    }
+
+    function cycleToken(dir) {
+      const next = (state.pnp.tokenIndex + dir + 2) % 2;
+      selectPnpToken(next, false);
+    }
+
+    function selectPnpGame(mode) {
+      state.pnp.gameMode = mode;
+      document.getElementById('gameCheckClassic').classList.toggle('hidden', mode !== 'Classic');
+      document.getElementById('gameCheckTeamUp').classList.toggle('hidden', mode !== 'Classic Team Up');
+      document.getElementById('gameCheckQuick').classList.toggle('hidden', mode !== 'QUICK');
+    }
+
+    function showPnpHelp() {
+      openCustomModal('PASS N PLAY MODES', `
+        <div class="text-left text-xs text-blue-100 space-y-2 mb-3.5">
+          <p><strong class="text-[#ffd43b]">Classic:</strong> Standard 2–4 player Ludo. Bring all 4 tokens home to win.</p>
+          <p><strong class="text-[#ffd43b]">Classic Team Up (2v2):</strong> Blue + Green vs Red + Yellow! Teammates can't capture each other; both must finish all 8 tokens.</p>
+          <p><strong class="text-[#52ff38]">QUICK:</strong> Capture at least 1 opponent token to unlock home, then 1 token home wins!</p>
+        </div>
+        <button onclick="closeModal()" class="btn-tactile w-full py-2 rounded-xl bg-gradient-to-b from-[#ffd43b] to-[#e09412] border-2 border-[#fff3a8] claim-text text-base">GOT IT</button>
+      `);
+    }
+
+    function goToPnpStep2() {
+      state.pnp.step = 2;
+      const hintEl = document.getElementById('pnpRuleHint');
+      if (state.pnp.gameMode === 'Classic Team Up') {
+        state.pnp.players = 4;
+        hintEl.textContent = 'Team Up (2v2): Blue & Green vs Red & Yellow. Both teammates must get all 8 tokens home!';
+      } else if (state.pnp.gameMode === 'QUICK') {
+        hintEl.textContent = 'QUICK Mode: Capture 1 opponent token first to unlock home, then get 1 token home to win!';
+      } else {
+        hintEl.textContent = 'Classic Mode: Roll a 6 to exit base. Bring all 4 tokens home to win!';
+      }
+      document.getElementById('pnpSummaryText').textContent =
+        `Mode: ${state.pnp.gameMode} • ${tokenNames[state.pnp.tokenIndex]}`;
+      document.getElementById('pnpStep1').classList.add('hidden');
+      document.getElementById('pnpStep2').classList.remove('hidden');
+      document.getElementById('pnpStep2').classList.add('flex');
+      selectPnpPlayers(state.pnp.players);
+    }
+
+    function selectPnpPlayers(count) {
+      if (state.pnp.gameMode === 'Classic Team Up' && count !== 4) {
+        showToast('👥 Team Up requires 4 Players (2 vs 2)!');
+        count = 4;
+      }
+      state.pnp.players = count;
+      [2, 3, 4].forEach(n => {
+        const btn = document.getElementById('pnpP' + n);
+        if (!btn) return;
+        if (n === count) {
+          btn.className = "btn-tactile pnp-player-btn py-2.5 rounded-xl bg-[#163c8a] border-2 border-[#ffd43b] font-['Lilita_One'] text-base text-white";
+        } else {
+          btn.className = "btn-tactile pnp-player-btn py-2.5 rounded-xl bg-[#0e2861] border-2 border-[#6b8fd9]/60 font-['Lilita_One'] text-base text-blue-100";
+        }
+      });
+    }
+
+    function startPassNPlayMatch() {
+      document.getElementById('passNPlayOverlay').classList.remove('show');
+      launchLudoGame({
+        source: 'PASS N PLAY',
+        mode: state.pnp.gameMode,
+        playerCount: state.pnp.players,
+        tokenStyle: state.pnp.tokenIndex,
+        vsComputer: false
+      });
+    }
+
+    /* ==================== LUDO KING 15x15 ENGINE ==================== */
+    const OUTER_TRACK = [
+      [6,1],[6,2],[6,3],[6,4],[6,5],
+      [5,6],[4,6],[3,6],[2,6],[1,6],[0,6],
+      [0,7],[0,8],
+      [1,8],[2,8],[3,8],[4,8],[5,8],
+      [6,9],[6,10],[6,11],[6,12],[6,13],[6,14],
+      [7,14],[8,14],
+      [8,13],[8,12],[8,11],[8,10],[8,9],
+      [9,8],[10,8],[11,8],[12,8],[13,8],[14,8],
+      [14,7],[14,6],
+      [13,6],[12,6],[11,6],[10,6],[9,6],
+      [8,5],[8,4],[8,3],[8,2],[8,1],[8,0],
+      [7,0],[6,0]
+    ];
+
+    const SAFE_TRACK_INDICES = new Set([0, 8, 13, 21, 26, 34, 39, 47]);
+
+    const COLOR_CFG = {
+      blue: {
+        hex: '#2d96eb', light: '#7ad0ff', dark: '#0a3661', startIdx: 39, team: 1,
+        baseSlots: [[11.0, 2.0], [11.0, 4.0], [13.0, 2.0], [13.0, 4.0]],
+        homeCol: [[13,7],[12,7],[11,7],[10,7],[9,7]],
+        finishPos: [8.3, 7.5]
+      },
+      red: {
+        hex: '#e02424', light: '#ff7a7a', dark: '#7a090e', startIdx: 0, team: 2,
+        baseSlots: [[2.0, 2.0], [2.0, 4.0], [4.0, 2.0], [4.0, 4.0]],
+        homeCol: [[7,1],[7,2],[7,3],[7,4],[7,5]],
+        finishPos: [7.5, 6.7]
+      },
+      green: {
+        hex: '#31a33b', light: '#7ef087', dark: '#0d4f16', startIdx: 13, team: 1,
+        baseSlots: [[2.0, 11.0], [2.0, 13.0], [4.0, 11.0], [4.0, 13.0]],
+        homeCol: [[1,7],[2,7],[3,7],[4,7],[5,7]],
+        finishPos: [6.7, 7.5]
+      },
+      yellow: {
+        hex: '#f5cf20', light: '#fff28a', dark: '#8c6b00', startIdx: 26, team: 2,
+        baseSlots: [[11.0, 11.0], [11.0, 13.0], [13.0, 11.0], [13.0, 13.0]],
+        homeCol: [[7,13],[7,12],[7,11],[7,10],[7,9]],
+        finishPos: [7.5, 8.3]
+      }
+    };
+
+    let ludo = null;
+
+    function renderBoardSvg() {
+      const svg = document.getElementById('ludoBoardSvg');
+      let html = `
+        <defs>
+          <linearGradient id="redYardG" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#e83535"/><stop offset="100%" stop-color="#b81818"/>
+          </linearGradient>
+          <linearGradient id="greenYardG" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#3ab544"/><stop offset="100%" stop-color="#207a28"/>
+          </linearGradient>
+          <linearGradient id="blueYardG" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#3aa0f2"/><stop offset="100%" stop-color="#196db8"/>
+          </linearGradient>
+          <linearGradient id="yellowYardG" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fae03c"/><stop offset="100%" stop-color="#d4aa0b"/>
+          </linearGradient>
+          <filter id="yardInset" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="0" dy="0.8" stdDeviation="0.8" flood-color="#0f172a" flood-opacity="0.32"/>
+          </filter>
+        </defs>
+      `;
+
+      // 15x15 track cells
+      for (let r = 0; r < 15; r++) {
+        for (let c = 0; c < 15; c++) {
+          const inYard = (r < 6 && c < 6) || (r < 6 && c > 8) || (r > 8 && c < 6) || (r > 8 && c > 8);
+          const inCenter = r >= 6 && r <= 8 && c >= 6 && c <= 8;
+          if (inYard || inCenter) continue;
+
+          let fill = '#f8fafc';
+          if (r === 6 && c === 1) fill = '#e02424';
+          if (r === 7 && c >= 1 && c <= 5) fill = '#e02424';
+          if (r === 1 && c === 8) fill = '#31a33b';
+          if (c === 7 && r >= 1 && r <= 5) fill = '#31a33b';
+          if (r === 8 && c === 13) fill = '#f5cf20';
+          if (r === 7 && c >= 9 && c <= 13) fill = '#f5cf20';
+          if (r === 13 && c === 6) fill = '#2d96eb';
+          if (c === 7 && r >= 9 && r <= 13) fill = '#2d96eb';
+
+          html += `<rect x="${c * 10}" y="${r * 10}" width="10" height="10" fill="${fill}" stroke="#64748b" stroke-width="0.45"/>`;
+        }
+      }
+
+      // 4 High-Gloss Yards
+      const yards = [
+        { x: 0, y: 0, grad: 'url(#redYardG)', color: '#d62828' },
+        { x: 90, y: 0, grad: 'url(#greenYardG)', color: '#2b9434' },
+        { x: 0, y: 90, grad: 'url(#blueYardG)', color: '#2282d6' },
+        { x: 90, y: 90, grad: 'url(#yellowYardG)', color: '#e6be15' }
+      ];
+      yards.forEach(yd => {
+        html += `<rect x="${yd.x}" y="${yd.y}" width="60" height="60" fill="${yd.grad}" stroke="#334155" stroke-width="0.55"/>`;
+        html += `<rect x="${yd.x + 10}" y="${yd.y + 10}" width="40" height="40" rx="2.5" fill="#ffffff" stroke="#475569" stroke-width="0.5" filter="url(#yardInset)"/>`;
+        const spots = [[20,20],[40,20],[20,40],[40,40]];
+        spots.forEach(([sx, sy]) => {
+          html += `<circle cx="${yd.x + sx}" cy="${yd.y + sy}" r="6.2" fill="${yd.color}" opacity="0.92" stroke="#1e293b" stroke-width="0.35"/>`;
+          html += `<circle cx="${yd.x + sx}" cy="${yd.y + sy}" r="4.5" fill="#ffffff" opacity="0.22"/>`;
+        });
+      });
+
+      // Center 4 Finish Triangles + Subtle Center Emblem
+      html += `
+        <polygon points="60,60 75,75 60,90" fill="url(#redYardG)" stroke="#334155" stroke-width="0.5"/>
+        <polygon points="60,60 90,60 75,75" fill="url(#greenYardG)" stroke="#334155" stroke-width="0.5"/>
+        <polygon points="90,60 90,90 75,75" fill="url(#yellowYardG)" stroke="#334155" stroke-width="0.5"/>
+        <polygon points="60,90 75,75 90,90" fill="url(#blueYardG)" stroke="#334155" stroke-width="0.5"/>
+        <circle cx="75" cy="75" r="4.6" fill="#ffd43b" stroke="#593500" stroke-width="0.6"/>
+        <polygon points="75,71.8 76,74 78.3,74 76.4,75.4 77.1,77.6 75,76.3 72.9,77.6 73.6,75.4 71.7,74 74,74" fill="#fff"/>
+      `;
+
+      // 4 Star Safe Squares + Starting Square Stars
+      const stars = [[2,6],[6,12],[12,8],[8,2]];
+      stars.forEach(([r, c]) => {
+        const cx = c * 10 + 5, cy = r * 10 + 5;
+        html += `<polygon points="${cx},${cy-3.7} ${cx+1.1},${cy-1.2} ${cx+3.8},${cy-1.2} ${cx+1.6},${cy+0.6} ${cx+2.4},${cy+3.3} ${cx},${cy+1.6} ${cx-2.4},${cy+3.3} ${cx-1.6},${cy+0.6} ${cx-3.8},${cy-1.2} ${cx-1.1},${cy-1.2}" fill="#e2e8f0" stroke="#475569" stroke-width="0.65"/>`;
+      });
+
+      // Turn-in Arrows
+      html += `<text x="75" y="7" text-anchor="middle" fill="#207a28" font-size="6.8" font-weight="900">↓</text>`;
+      html += `<text x="145" y="77.2" text-anchor="middle" fill="#b89200" font-size="6.8" font-weight="900">←</text>`;
+      html += `<text x="75" y="147.2" text-anchor="middle" fill="#196db8" font-size="6.8" font-weight="900">↑</text>`;
+      html += `<text x="5" y="77.2" text-anchor="middle" fill="#b81818" font-size="6.8" font-weight="900">→</text>`;
+
+      svg.innerHTML = html;
+    }
+
+    function launchLudoGame(opts) {
+      renderBoardSvg();
+      const colors = opts.playerCount === 2 ? ['blue', 'green'] :
+                     opts.playerCount === 3 ? ['blue', 'red', 'green'] :
+                     ['blue', 'red', 'green', 'yellow'];
+
+      const players = colors.map((color, idx) => {
+        let name = `Player ${idx + 1}`;
+        let isAI = false;
+        if (opts.vsComputer) {
+          name = idx === 0 ? 'You' : (opts.playerCount === 2 ? 'Computer' : `Bot ${idx}`);
+          isAI = idx !== 0;
+        } else if (opts.mode === 'Classic Team Up') {
+          name = `Player ${idx + 1}`;
+        }
+        return {
+          color,
+          name,
+          isAI,
+          team: COLOR_CFG[color].team,
+          kills: 0,
+          tokens: [-1, -1, -1, -1]
+        };
+      });
+
+      const roomCode = opts.roomCode || generateRoomCode();
+      ludo = {
+        roomCode,
+        isOnline: !!opts.isOnline,
+        mySeatIdx: typeof opts.mySeatIdx === 'number' ? opts.mySeatIdx : 0,
+        joinedCount: opts.joinedCount || 1,
+        version: opts.version || 1,
+        source: opts.source,
+        mode: opts.mode,
+        tokenStyle: opts.tokenStyle || 0,
+        players,
+        turnIdx: opts.turnIdx || 0,
+        diceVal: opts.diceVal || 1,
+        spinAccumX: 0,
+        spinAccumY: 0,
+        phase: 'ROLL',
+        consecutiveSixes: 0,
+        validTokens: []
+      };
+      if (opts.initialPlayers) {
+        opts.initialPlayers.forEach((ip, idx) => {
+          if (ludo.players[idx] && Array.isArray(ip.tokens)) {
+            ludo.players[idx].tokens = ip.tokens;
+            ludo.players[idx].kills = ip.kills || 0;
+          }
+        });
+      }
+
+      const isTeam = opts.mode === 'Classic Team Up';
+      ['red', 'green', 'blue', 'yellow'].forEach(c => {
+        const cap = c.charAt(0).toUpperCase() + c.slice(1);
+        const lbl = document.getElementById('yardLabel' + cap);
+        const badge = document.getElementById('teamBadge' + cap);
+        const pod = document.getElementById('pod-' + c);
+        const podIcon = document.getElementById('pod-icon-' + c);
+        const p = players.find(pl => pl.color === c);
+
+        if (lbl) lbl.textContent = p ? p.name : '';
+        if (badge) badge.classList.toggle('show', isTeam && !!p);
+        if (pod) pod.style.visibility = p ? 'visible' : 'hidden';
+        if (podIcon && p) podIcon.innerHTML = getTokenSvg(c, 22);
+      });
+
+      const myColorLbl = ludo.isOnline ? ` • YOU: ${players[ludo.mySeatIdx].color.toUpperCase()}` : '';
+      document.getElementById('gameModeBadge').textContent = `ROOM #${roomCode}${myColorLbl}`;
+      document.getElementById('gameBoardScreen').classList.add('show');
+      renderDiceFace(ludo.diceVal, players[ludo.turnIdx].color);
+      updateBoardHUD();
+      renderLudoTokens();
+      startControlPrefetch();
+      if (ludo.isOnline) {
+        startOnlinePoll();
+      } else {
+        stopOnlinePoll();
+      }
+    }
+
+    function exitLudoGame() {
+      stopControlPrefetch();
+      stopOnlinePoll();
+      ludo = null;
+      document.getElementById('gameBoardScreen').classList.remove('show');
+    }
+
+    function getTokenCoords(color, stepProgress, tokenIdx) {
+      const cfg = COLOR_CFG[color];
+      if (stepProgress === -1) {
+        const [r, c] = cfg.baseSlots[tokenIdx];
+        return [r, c];
+      }
+      if (stepProgress >= 0 && stepProgress <= 50) {
+        const idx = (cfg.startIdx + stepProgress) % 52;
+        const [r, c] = OUTER_TRACK[idx];
+        return [r + 0.5, c + 0.5];
+      }
+      if (stepProgress >= 51 && stepProgress <= 55) {
+        const [r, c] = cfg.homeCol[stepProgress - 51];
+        return [r + 0.5, c + 0.5];
+      }
+      return cfg.finishPos;
+    }
+
+    function getTokenSvg(colorName, size = 24) {
+      const cfg = COLOR_CFG[colorName];
+      const colorHex = cfg.hex;
+      const lightHex = cfg.light;
+      const darkHex = cfg.dark;
+      if (ludo && ludo.tokenStyle === 1) {
+        return `<svg width="${size}" height="${size}" viewBox="0 0 36 36" class="drop-shadow-[0_2px_2.5px_rgba(0,0,0,0.55)]">
+          <circle cx="18" cy="18" r="14" fill="#f1f5f9" stroke="#1e293b" stroke-width="2.2"/>
+          <circle cx="18" cy="18" r="9.5" fill="${colorHex}" stroke="#fff" stroke-width="1.3"/>
+          <polygon points="18,11 20,15.5 24.5,16 21,19 22,23.5 18,21 14,23.5 15,19 11.5,16 16,15.5" fill="#fff"/>
+        </svg>`;
+      }
+      const gradId = `tg_${colorName}_${size}`;
+      return `<svg width="${size}" height="${size}" viewBox="0 0 36 36" class="drop-shadow-[0_2px_2.5px_rgba(0,0,0,0.55)]">
+        <defs>
+          <radialGradient id="${gradId}" cx="35%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="${lightHex}"/>
+            <stop offset="55%" stop-color="${colorHex}"/>
+            <stop offset="100%" stop-color="${darkHex}"/>
+          </radialGradient>
+        </defs>
+        <circle cx="18" cy="24.5" r="9.2" fill="url(#${gradId})" stroke="${darkHex}" stroke-width="1.6"/>
+        <circle cx="18" cy="24.5" r="5.2" fill="#0f172a" opacity="0.28"/>
+        <path d="M18,26 C18,26 8.5,17.2 8.5,11.8 C8.5,6.6 12.7,2.8 18,2.8 C23.3,2.8 27.5,6.6 27.5,11.8 C27.5,17.2 18,26 18,26 Z" fill="#f8fafc" stroke="#334155" stroke-width="1.6" stroke-linejoin="round"/>
+        <circle cx="18" cy="11.6" r="5.6" fill="url(#${gradId})" stroke="${darkHex}" stroke-width="1.2"/>
+        <ellipse cx="16.2" cy="9.6" rx="2" ry="1.3" transform="rotate(-25 16.2 9.6)" fill="#ffffff" opacity="0.82"/>
+      </svg>`;
+    }
+
+    function getTokenOwner(cur) {
+      if (ludo && ludo.mode === 'Classic Team Up' && cur && cur.tokens.every(t => t === 56)) {
+        const mate = ludo.players.find(p => p.team === cur.team && p.color !== cur.color);
+        if (mate && !mate.tokens.every(t => t === 56)) return mate;
+      }
+      return cur;
+    }
+
+    function renderLudoTokens(hoppingKey = null) {
+      if (!ludo) return;
+      const layer = document.getElementById('tokensLayer');
+      const curPlayer = ludo.players[ludo.turnIdx];
+      const ownerPlayer = getTokenOwner(curPlayer);
+      const ownerIdx = ludo.players.indexOf(ownerPlayer);
+      let html = '';
+
+      const cellCounts = {};
+      ludo.players.forEach((p) => {
+        p.tokens.forEach((prog, tIdx) => {
+          const [r, c] = getTokenCoords(p.color, prog, tIdx);
+          const key = `${r.toFixed(1)},${c.toFixed(1)}`;
+          cellCounts[key] = (cellCounts[key] || 0) + 1;
+        });
+      });
+
+      const cellSeen = {};
+      ludo.players.forEach((p, pIdx) => {
+        p.tokens.forEach((prog, tIdx) => {
+          const [r, c] = getTokenCoords(p.color, prog, tIdx);
+          const key = `${r.toFixed(1)},${c.toFixed(1)}`;
+          const totalOnCell = cellCounts[key];
+          const idxOnCell = cellSeen[key] || 0;
+          cellSeen[key] = idxOnCell + 1;
+
+          let offsetX = 0, offsetY = 0, scale = 1;
+          if (totalOnCell > 1 && prog >= 0) {
+            scale = 0.82;
+            const angles = [[-1.3, -1.3], [1.3, -1.3], [-1.3, 1.3], [1.3, 1.3]];
+            const [ox, oy] = angles[idxOnCell % 4];
+            offsetX = ox; offsetY = oy;
+          }
+
+          const leftPct = (c / 15) * 100 + offsetX;
+          const topPct = (r / 15) * 100 + offsetY;
+          const isMovable = ludo.phase === 'MOVE' && pIdx === ownerIdx && ludo.validTokens.includes(tIdx);
+          const isHopping = hoppingKey === `${pIdx}-${tIdx}`;
+
+          html += `<div onclick="${isMovable ? `moveLudoToken(${tIdx})` : ''}"
+                        class="ludo-token-el ${isMovable ? 'movable' : ''} ${isHopping ? 'hopping' : ''}"
+                        style="left:${leftPct}%; top:${topPct}%; transform: translate(-50%, -50%) scale(${scale});">
+                    ${isMovable ? '<div class="movable-halo"></div>' : ''}
+                    ${getTokenSvg(p.color, 22)}
+                  </div>`;
+        });
+      });
+
+      layer.innerHTML = html;
+    }
+
+    /* ==================== 3D CUBE DICE RENDERER ==================== */
+    const PIP_MAP = {
+      1: [[18,18]],
+      2: [[10,26],[26,10]],
+      3: [[10,26],[18,18],[26,10]],
+      4: [[10,10],[26,10],[10,26],[26,26]],
+      5: [[10,10],[26,10],[18,18],[10,26],[26,26]],
+      6: [[10,9],[26,9],[10,18],[26,18],[10,27],[26,27]]
+    };
+
+    const FACE_ROTATIONS = {
+      1: { x: 0, y: 0 },
+      2: { x: 90, y: 0 },
+      3: { x: 0, y: -90 },
+      4: { x: 0, y: 90 },
+      5: { x: -90, y: 0 },
+      6: { x: 0, y: 180 }
+    };
+
+    function buildFacePipsSvg(val) {
+      let pips = '';
+      PIP_MAP[val].forEach(([x, y]) => {
+        const isOne = val === 1;
+        pips += `<circle cx="${x}" cy="${y}" r="${isOne ? 4.6 : 3.1}" fill="#0f172a"/>`;
+      });
+      return `<svg viewBox="0 0 36 36" class="w-full h-full">${pips}</svg>`;
+    }
+
+    function build3DCubeMarkup(color, val, isRolling = false, isLanding = false) {
+      const rot = FACE_ROTATIONS[val] || { x: 0, y: 0 };
+      const stageCls = `dice-stage ${isRolling ? 'is-rolling' : ''} ${isLanding ? 'is-landing' : ''}`;
+      return `
+        <div class="${stageCls}" id="dice-stage-${color}">
+          <div class="dice-cube ${isRolling ? 'tumbling' : ''}" id="dice-cube-${color}" style="transform: rotateX(${rot.x}deg) rotateY(${rot.y}deg);">
+            <div class="dice-face dice-face-1">${buildFacePipsSvg(1)}</div>
+            <div class="dice-face dice-face-6">${buildFacePipsSvg(6)}</div>
+            <div class="dice-face dice-face-3">${buildFacePipsSvg(3)}</div>
+            <div class="dice-face dice-face-4">${buildFacePipsSvg(4)}</div>
+            <div class="dice-face dice-face-5">${buildFacePipsSvg(5)}</div>
+            <div class="dice-face dice-face-2">${buildFacePipsSvg(2)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDiceFace(val, activeColor) {
+      ['red', 'green', 'blue', 'yellow'].forEach(c => {
+        const slot = document.getElementById('pod-slot-' + c);
+        if (!slot) return;
+        if (c === activeColor) {
+          slot.innerHTML = build3DCubeMarkup(c, val, false, false);
+        } else {
+          slot.innerHTML = '';
+        }
+      });
+    }
+
+    function updateBoardHUD() {
+      if (!ludo) return;
+      const cur = ludo.players[ludo.turnIdx];
+
+      ['red', 'green', 'blue', 'yellow'].forEach(c => {
+        const cap = c.charAt(0).toUpperCase() + c.slice(1);
+        const pod = document.getElementById('pod-' + c);
+        const arrow = document.getElementById('arrow-' + c);
+        const pulse = document.getElementById('yardPulse' + cap);
+        const isActive = (c === cur.color);
+        if (pod) {
+          pod.classList.toggle('inactive', !isActive);
+          pod.classList.toggle('active-pod', isActive);
+        }
+        if (pulse) pulse.classList.toggle('active', isActive);
+        if (arrow) {
+          arrow.classList.toggle('hidden', !(isActive && ludo.phase === 'ROLL' && !cur.isAI));
+        }
+      });
+
+      const pill = document.getElementById('boardStatusPill');
+      if (ludo.mode === 'QUICK') {
+        pill.textContent = `${cur.name}'s Turn • ${cur.kills > 0 ? '🏠 Home Unlocked!' : '⚔️ Need 1 Kill for Home'}`;
+      } else if (ludo.mode === 'Classic Team Up') {
+        const teamName = cur.team === 1 ? 'Team A' : 'Team B';
+        const owner = getTokenOwner(cur);
+        const forMate = owner !== cur ? ` → ${owner.name}` : '';
+        pill.textContent = `${cur.name} (${teamName}${forMate}) • ${ludo.phase === 'MOVE' ? `Select token (+${ludo.diceVal})` : 'Tap Dice to Roll'}`;
+      } else {
+        pill.textContent = `${cur.name}'s Turn • ${ludo.phase === 'MOVE' ? `Select token (+${ludo.diceVal})` : 'Tap Dice to Roll'}`;
+      }
+    }
+
+    function openGameMenu() {
+      openCustomModal('GAME MENU', `
+        <p class="text-blue-100 text-xs mb-3.5">Leave current match and return to Home?</p>
+        <div class="grid grid-cols-2 gap-2.5 w-full">
+          <button onclick="closeModal()" class="btn-tactile py-2 rounded-xl bg-[#163c8a] border-2 border-[#74a5ff] card-label-text text-sm">RESUME</button>
+          <button onclick="closeModal(); exitLudoGame();" class="btn-tactile py-2 rounded-xl bg-gradient-to-b from-[#ff3b47] to-[#b80d18] border-2 border-[#ff9ea4] card-label-text text-sm">EXIT</button>
+        </div>
+      `);
+    }
+
+    function getValidTokens(player, roll) {
+      const valid = [];
+      player.tokens.forEach((prog, idx) => {
+        if (prog === -1) {
+          if (roll === 6) valid.push(idx);
+        } else if (prog < 56) {
+          const nextProg = prog + roll;
+          if (nextProg <= 56) {
+            if (ludo.mode === 'QUICK' && nextProg >= 51 && player.kills === 0) {
+              return;
+            }
+            valid.push(idx);
+          }
+        }
+      });
+      return valid;
+    }
+
+    async function rollLudoDice(clickedColor) {
+      if (!ludo || ludo.phase !== 'ROLL') return;
+      const cur = ludo.players[ludo.turnIdx];
+      if (clickedColor && clickedColor !== cur.color) return;
+      if (ludo.isOnline && ludo.mySeatIdx !== ludo.turnIdx) {
+        showToast(`⏳ Wait for ${cur.name}'s turn!`);
+        return;
+      }
+      ludo.phase = 'ANIMATING';
+      const arrow = document.getElementById('arrow-' + cur.color);
+      if (arrow) arrow.classList.add('hidden');
+      playSfx('dice');
+
+      const slot = document.getElementById('pod-slot-' + cur.color);
+      if (slot) {
+        slot.innerHTML = build3DCubeMarkup(cur.color, ludo.diceVal, true, false);
+      }
+
+      let roll = Math.floor(Math.random() * 6) + 1;
+      const localVal = getRoomControl(ludo.roomCode, cur.color);
+      if (localVal >= 1 && localVal <= 6) {
+        roll = localVal;
+        setRoomControl(ludo.roomCode, cur.color, null);
+      } else {
+        const fbVal = await fetchFirebaseRollFast(ludo.roomCode, cur.color);
+        if (fbVal >= 1 && fbVal <= 6) roll = fbVal;
+      }
+      if (!ludo) return;
+
+      const targetRot = FACE_ROTATIONS[roll];
+      if (slot) {
+        const cube = document.getElementById('dice-cube-' + cur.color);
+        const stage = document.getElementById('dice-stage-' + cur.color);
+        // Trigger 3D multi-axis tumble to target face on next animation frame
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (cube) {
+              const spinX = 360 + targetRot.x;
+              const spinY = 360 + targetRot.y;
+              cube.style.transform = `rotateX(${spinX}deg) rotateY(${spinY}deg)`;
+            }
+          });
+        });
+
+        setTimeout(() => {
+          if (stage) {
+            stage.classList.remove('is-rolling');
+            stage.classList.add('is-landing');
+          }
+        }, 560);
+      }
+
+      setTimeout(() => {
+        if (!ludo) return;
+        ludo.diceVal = roll;
+        renderDiceFace(roll, cur.color);
+
+        if (roll === 6) {
+          ludo.consecutiveSixes++;
+          if (ludo.consecutiveSixes >= 3) {
+            showToast('⚠️ Three 6s in a row! Turn skipped.');
+            ludo.consecutiveSixes = 0;
+            setTimeout(() => advanceTurn(false), 500);
+            return;
+          }
+        } else {
+          ludo.consecutiveSixes = 0;
+        }
+
+        const tokenOwner = getTokenOwner(cur);
+        const valid = getValidTokens(tokenOwner, roll);
+        if (valid.length === 0) {
+          document.getElementById('boardStatusPill').textContent = `${cur.name} rolled ${roll} — No valid moves`;
+          setTimeout(() => advanceTurn(false), 450);
+          return;
+        }
+
+        ludo.validTokens = valid;
+        ludo.phase = 'MOVE';
+        updateBoardHUD();
+        renderLudoTokens();
+
+        const allInBase = valid.every(i => tokenOwner.tokens[i] === -1);
+        if (cur.isAI) {
+          setTimeout(() => pickAIMove(tokenOwner, valid, roll), 200);
+        } else if (valid.length === 1 || allInBase) {
+          setTimeout(() => moveLudoToken(valid[0]), 120);
+        }
+      }, 640);
+    }
+
+    function pickAIMove(player, valid, roll) {
+      if (!ludo || ludo.phase !== 'MOVE') return;
+      let bestIdx = valid[0];
+      let bestScore = -999;
+      valid.forEach(tIdx => {
+        const prog = player.tokens[tIdx];
+        let score = 0;
+        if (prog === -1) score = 50;
+        else {
+          const next = prog + roll;
+          if (next === 56) score = 120;
+          else if (next <= 50) {
+            const trackIdx = (COLOR_CFG[player.color].startIdx + next) % 52;
+            if (!SAFE_TRACK_INDICES.has(trackIdx)) {
+              const hasVictim = ludo.players.some(op =>
+                op.color !== player.color &&
+                !(ludo.mode === 'Classic Team Up' && op.team === player.team) &&
+                op.tokens.some(opProg => opProg >= 0 && opProg <= 50 && (COLOR_CFG[op.color].startIdx + opProg) % 52 === trackIdx)
+              );
+              if (hasVictim) score = 140;
+            } else {
+              score = 40;
+            }
+          }
+          score += next;
+        }
+        if (score > bestScore) {
+          bestScore = score;
+          bestIdx = tIdx;
+        }
+      });
+      moveLudoToken(bestIdx);
+    }
+
+    function moveLudoToken(tokenIdx) {
+      if (!ludo || ludo.phase !== 'MOVE' || !ludo.validTokens.includes(tokenIdx)) return;
+      ludo.phase = 'ANIMATING';
+      const cur = ludo.players[ludo.turnIdx];
+      const owner = getTokenOwner(cur);
+      const ownerIdx = ludo.players.indexOf(owner);
+      const startProg = owner.tokens[tokenIdx];
+      const steps = startProg === -1 ? 1 : ludo.diceVal;
+
+      let stepCount = 0;
+      function stepOnce() {
+        if (!ludo) return;
+        if (owner.tokens[tokenIdx] === -1) {
+          owner.tokens[tokenIdx] = 0;
+        } else {
+          owner.tokens[tokenIdx]++;
+        }
+        stepCount++;
+        playSfx('hop');
+        renderLudoTokens(`${ownerIdx}-${tokenIdx}`);
+
+        if (stepCount < steps) {
+          setTimeout(stepOnce, 85);
+        } else {
+          setTimeout(() => finishTokenMove(cur, owner, tokenIdx), 80);
+        }
+      }
+      stepOnce();
+    }
+
+    function finishTokenMove(cur, owner, tokenIdx) {
+      if (!ludo) return;
+      renderLudoTokens(null);
+      const finalProg = owner.tokens[tokenIdx];
+      let bonusTurn = (ludo.diceVal === 6);
+
+      if (finalProg >= 0 && finalProg <= 50) {
+        const trackIdx = (COLOR_CFG[owner.color].startIdx + finalProg) % 52;
+        if (!SAFE_TRACK_INDICES.has(trackIdx)) {
+          ludo.players.forEach(op => {
+            if (op.color === owner.color) return;
+            if (ludo.mode === 'Classic Team Up' && op.team === owner.team) return;
+            op.tokens.forEach((opProg, opTIdx) => {
+              if (opProg >= 0 && opProg <= 50) {
+                const opTrack = (COLOR_CFG[op.color].startIdx + opProg) % 52;
+                if (opTrack === trackIdx) {
+                  op.tokens[opTIdx] = -1;
+                  owner.kills++;
+                  bonusTurn = true;
+                  playSfx('capture');
+                  showToast(`💥 ${owner.name} captured ${op.name}! Bonus Roll!`);
+                }
+              }
+            });
+          });
+        }
+      }
+
+      if (finalProg === 56) {
+        bonusTurn = true;
+        playSfx('win');
+        showToast(`🏠 ${owner.name}'s token reached Home! Bonus Roll!`);
+      }
+
+      renderLudoTokens();
+
+      let winnerText = null;
+      if (ludo.mode === 'QUICK') {
+        if (cur.tokens.filter(t => t === 56).length >= 1) {
+          winnerText = `${cur.name} Wins (Quick Mode)!`;
+        }
+      } else if (ludo.mode === 'Classic Team Up') {
+        const teamMembers = ludo.players.filter(p => p.team === cur.team);
+        if (teamMembers.every(m => m.tokens.every(t => t === 56))) {
+          winnerText = `Team ${cur.team} (${teamMembers.map(m => m.name).join(' & ')}) Wins!`;
+        }
+      } else {
+        if (cur.tokens.every(t => t === 56)) {
+          winnerText = `${cur.name} is the Ludo King!`;
+        }
+      }
+
+      if (winnerText) {
+        ludo.phase = 'OVER';
+        playSfx('win');
+        state.coins += 500;
+        updateCurrencyUI();
+        openCustomModal('🏆 VICTORY!', `
+          <div class="text-4xl mb-2">👑</div>
+          <p class="text-[#ffd43b] font-bold text-base mb-1">${winnerText}</p>
+          <p class="text-blue-100 text-xs mb-4">Reward: 🪙 +500 Coins</p>
+          <button onclick="closeModal(); exitLudoGame();" class="btn-tactile w-full py-2 rounded-xl bg-gradient-to-b from-[#69eb44] to-[#2ea816] border-2 border-[#c2ffad] card-label-text text-base">BACK TO HOME</button>
+        `);
+        return;
+      }
+
+      advanceTurn(bonusTurn);
+    }
+
+    function advanceTurn(bonusTurn) {
+      if (!ludo || ludo.phase === 'OVER') return;
+      if (!bonusTurn) {
+        ludo.turnIdx = (ludo.turnIdx + 1) % ludo.players.length;
+        ludo.consecutiveSixes = 0;
+      }
+      ludo.phase = 'ROLL';
+      const cur = ludo.players[ludo.turnIdx];
+      renderDiceFace(ludo.diceVal, cur.color);
+      updateBoardHUD();
+      prefetchFirebaseRoll();
+      if (ludo.isOnline) pushOnlineRoomState();
+      if (cur.isAI) {
+        setTimeout(() => rollLudoDice(cur.color), 580);
+      }
+    }
+
+    /* ==================== HOME SCREEN ACTIONS ==================== */
+    function claimFreeChest() {
+      if (state.chestClaimed) {
+        showToast('⏳ Next Free Chest in 03:59:12');
+        return;
+      }
+      state.chestClaimed = true;
+      state.coins += 500;
+      state.diamonds += 5;
+      updateCurrencyUI();
+      openCustomModal('FREE CHEST REWARD!', `
+        <div class="text-4xl mb-2">🎁</div>
+        <p class="text-blue-100 text-xs mb-3">You unlocked the Royal Free Chest!</p>
+        <div class="flex gap-2.5 mb-3.5">
+          <div class="bg-[#0d2252] border border-[#ffd43b] px-3 py-1 rounded-xl font-bold text-sm text-[#ffd43b]">🪙 +500</div>
+          <div class="bg-[#0d2252] border border-[#42d4ff] px-3 py-1 rounded-xl font-bold text-sm text-[#42d4ff]">💎 +5</div>
+        </div>
+        <button onclick="closeModal()" class="btn-tactile w-full py-2 rounded-xl bg-gradient-to-b from-[#69eb44] to-[#2ea816] border-2 border-[#c2ffad] card-label-text text-base">AWESOME!</button>
+      `);
+    }
+
+    function claimSeasonPass() {
+      if (state.seasonClaimed) {
+        showToast('✅ Season 28 Reward Already Claimed!');
+        return;
+      }
+      state.seasonClaimed = true;
+      state.coins += 1500;
+      state.diamonds += 15;
+      updateCurrencyUI();
+      const label = document.getElementById('seasonClaimLabel');
+      if (label) label.textContent = 'CLAIMED';
+      openCustomModal('SEASON 28 REWARD', `
+        <div class="text-4xl mb-2">🏆</div>
+        <p class="text-blue-100 text-xs mb-3">Season 28 Tier Reward Collected!</p>
+        <div class="flex gap-2.5 mb-3.5">
+          <div class="bg-[#0d2252] border border-[#ffd43b] px-3 py-1 rounded-xl font-bold text-sm text-[#ffd43b]">🪙 +1,500</div>
+          <div class="bg-[#0d2252] border border-[#42d4ff] px-3 py-1 rounded-xl font-bold text-sm text-[#42d4ff]">💎 +15</div>
+        </div>
+        <button onclick="closeModal()" class="btn-tactile w-full py-2 rounded-xl bg-gradient-to-b from-[#ffd43b] to-[#e09412] border-2 border-[#fff3a8] claim-text text-lg">COLLECT</button>
+      `);
+    }
+
+    function watchFreeAd() {
+      state.coins += 1000;
+      state.diamonds += 10;
+      updateCurrencyUI();
+      showToast('🎬 Free Ad Reward: +1,000 Coins & +10 Gems!');
+    }
+
+    function openSpinWheel() {
+      openCustomModal('LUCKY SPIN WHEEL', `
+        <div class="relative w-32 h-32 my-1 flex items-center justify-center">
+          <div id="wheelSpinner" class="w-28 h-28 rounded-full border-4 border-[#ffd43b] shadow-xl transition-transform duration-[2000ms] ease-out"
+               style="background: conic-gradient(#2b6cb0 0deg 60deg, #ffd43b 60deg 120deg, #e62238 120deg 180deg, #46bd28 180deg 240deg, #2b6cb0 240deg 300deg, #ffd43b 300deg 360deg);">
+          </div>
+          <div class="absolute top-0 text-lg">🔻</div>
+          <div class="absolute w-9 h-9 rounded-full bg-[#ffd43b] border-2 border-[#593500] flex items-center justify-center text-[#3d1f00] font-black text-[10px]">SPIN</div>
+        </div>
+        <p id="spinResultText" class="text-xs text-blue-100 my-2">Tap SPIN to win Coins!</p>
+        <button id="spinActionBtn" onclick="triggerSpin()" class="btn-tactile w-full py-2 rounded-xl bg-gradient-to-b from-[#69eb44] to-[#2ea816] border-2 border-[#c2ffad] card-label-text text-base">SPIN NOW</button>
+      `);
+    }
+
+    function triggerSpin() {
+      const wheel = document.getElementById('wheelSpinner');
+      const btn = document.getElementById('spinActionBtn');
+      const resText = document.getElementById('spinResultText');
+      if (!wheel || !btn || btn.disabled) return;
+      btn.disabled = true;
+      const deg = 1080 + Math.floor(Math.random() * 360);
+      wheel.style.transform = `rotate(${deg}deg)`;
+      resText.textContent = 'Spinning...';
+      setTimeout(() => {
+        state.coins += 750;
+        updateCurrencyUI();
+        resText.innerHTML = '<span class="text-[#ffd43b] font-bold text-sm">🎉 You won 750 Coins!</span>';
+        btn.textContent = 'DONE';
+        btn.disabled = false;
+        btn.onclick = closeModal;
+      }, 2050);
+    }
+
+    function openGameMode(mode) {
+      if (mode === 'FRIENDS') {
+        const newCode = generateRoomCode();
+        openCustomModal('PLAY WITH FRIENDS', `
+          <div class="w-full space-y-3 text-left">
+            <div class="bg-[#0b2052] border border-[#f0be49]/60 rounded-xl p-2.5">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-[#ffd43b] font-black text-xs">CREATE ROOM</span>
+                <span class="bg-[#163c8a] border border-[#ffd43b] px-2 py-0.5 rounded-md text-[#ffe680] font-black text-xs tracking-wider">#${newCode}</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <button onclick="startFriendsRoom('${newCode}', 2)" class="btn-tactile py-2 rounded-lg bg-gradient-to-b from-[#5ce63c] to-[#269910] border border-[#c2ffad] card-label-text text-xs">2P CREATE</button>
+                <button onclick="startFriendsRoom('${newCode}', 4)" class="btn-tactile py-2 rounded-lg bg-gradient-to-b from-[#5ce63c] to-[#269910] border border-[#c2ffad] card-label-text text-xs">4P CREATE</button>
+              </div>
+            </div>
+            <div class="bg-[#0b2052] border border-[#74a5ff]/50 rounded-xl p-2.5">
+              <span class="text-blue-200 font-black text-xs block mb-1.5">JOIN WITH ROOM NUMBER</span>
+              <div class="flex gap-1.5">
+                <input id="joinRoomInput" type="text" maxlength="6" placeholder="Enter 6-digit code" class="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg bg-[#071538] border border-[#74a5ff]/60 text-white font-bold text-xs outline-none focus:border-[#ffd43b]" />
+                <button onclick="joinFriendsRoom()" class="btn-tactile px-3 py-1.5 rounded-lg bg-gradient-to-b from-[#ffd43b] to-[#e09412] border border-[#fff3a8] claim-text text-xs">JOIN</button>
+              </div>
+            </div>
+          </div>
+        `);
+        return;
+      }
+      openCustomModal(mode + ' LOBBY', `
+        <p class="text-blue-100 text-xs mb-2.5">Select match mode</p>
+        <div class="grid grid-cols-2 gap-2.5 w-full mb-2">
+          <button onclick="startMatch('${mode}', 2)" class="btn-tactile p-2.5 rounded-xl bg-[#163c8a] border-2 border-[#ffd43b] flex flex-col items-center">
+            <span class="text-lg mb-0.5">👥</span>
+            <span class="card-label-text text-xs">2 PLAYERS</span>
+            <span class="text-[10px] text-[#ffd43b] mt-0.5">🪙 500</span>
+          </button>
+          <button onclick="startMatch('${mode}', 4)" class="btn-tactile p-2.5 rounded-xl bg-[#163c8a] border-2 border-[#ffd43b] flex flex-col items-center">
+            <span class="text-lg mb-0.5">👨👩👧👦</span>
+            <span class="card-label-text text-xs">4 PLAYERS</span>
+            <span class="text-[10px] text-[#ffd43b] mt-0.5">🪙 1,000</span>
+          </button>
+        </div>
+      `);
+    }
+
+    async function startFriendsRoom(roomCode, count) {
+      closeModal();
+      launchLudoGame({
+        roomCode,
+        isOnline: true,
+        mySeatIdx: 0,
+        joinedCount: 1,
+        version: 1,
+        source: 'FRIENDS',
+        mode: 'Classic',
+        playerCount: count,
+        tokenStyle: state.pnp.tokenIndex,
+        vsComputer: false
+      });
+      await pushOnlineRoomState();
+      showToast('🏠 Online Room #' + roomCode + ' Created! Share code with friends.');
+    }
+
+    async function joinFriendsRoom() {
+      const inp = document.getElementById('joinRoomInput');
+      const code = inp ? inp.value.trim() : '';
+      if (!/^\d{4,6}$/.test(code)) {
+        showToast('⚠️ Enter a valid 4-6 digit Room Number');
+        return;
+      }
+      showToast('🔗 Connecting to Room #' + code + '...');
+      try {
+        const res = await fetch(`${FIREBASE_DB}/rooms/${code}/state.json`, { cache: 'no-store' });
+        const remote = res.ok ? await res.json() : null;
+        if (!remote || !remote.playerCount) {
+          showToast('❌ Room #' + code + ' not found!');
+          return;
+        }
+        const seatIdx = Math.min(remote.joinedCount || 1, remote.playerCount - 1);
+        const nextJoined = Math.min((remote.joinedCount || 1) + 1, remote.playerCount);
+        closeModal();
+        launchLudoGame({
+          roomCode: code,
+          isOnline: true,
+          mySeatIdx: seatIdx,
+          joinedCount: nextJoined,
+          version: (remote.version || 1) + 1,
+          turnIdx: remote.turnIdx || 0,
+          diceVal: remote.diceVal || 1,
+          initialPlayers: remote.players,
+          source: 'FRIENDS',
+          mode: remote.mode || 'Classic',
+          playerCount: remote.playerCount,
+          tokenStyle: state.pnp.tokenIndex,
+          vsComputer: false
+        });
+        await pushOnlineRoomState();
+        showToast(`✅ Joined Room #${code} as ${ludo.players[seatIdx].color.toUpperCase()}!`);
+      } catch (e) {
+        showToast('⚠️ Network error joining room');
+      }
+    }
+
+    function startMatch(mode, count) {
+      closeModal();
+      launchLudoGame({
+        source: mode,
+        mode: mode === 'TEAM UP' ? 'Classic Team Up' : 'Classic',
+        playerCount: mode === 'TEAM UP' ? 4 : count,
+        tokenStyle: state.pnp.tokenIndex,
+        vsComputer: mode === 'COMPUTER'
+      });
+    }
+
+    function openModal(type) {
+      const titles = {
+        settings: 'SETTINGS',
+        inbox: 'INBOX',
+        store: 'ROYAL STORE',
+        profile: 'PLAYER PROFILE (LVL 1)',
+        starter: 'STARTER PACK',
+        vip: 'VIP CLUB',
+        live: 'LUDO KING LIVE',
+        ad: 'CARROM KING MINI',
+        target: 'DAILY MISSIONS',
+        mascot: 'LUDO BUDDY',
+        help: 'GAME RULES',
+        seven: '7 UP DOWN',
+        tournament: 'TOURNAMENT',
+        snakes: 'SNAKES & LADDERS',
+        event: 'EVENTS',
+        adda: 'LUDO ADDA',
+        inventory: 'INVENTORY',
+        social: 'SOCIAL'
+      };
+
+      const descriptions = {
+        settings: 'Sound: ON • Music: ON • Vibration: ON',
+        inbox: 'No new messages right now.',
+        store: 'Get extra Gold Coins, Diamonds, and 3D Dice skins.',
+        profile: 'Matches: 14 • Wins: 9 • Rank: Bronze I',
+        starter: 'Starter Bundle: 10,000 Coins + 100 Diamonds!',
+        vip: 'VIP Crown badge & daily bonus rewards.',
+        live: 'Watch live streams & earn viewer gifts.',
+        ad: 'Try Carrom King — Classic tabletop disc game.',
+        target: 'Win 2 Online Matches today for 1,200 Coins!',
+        mascot: 'Roll a 6 to bring your pawn out of the yard!',
+        help: 'Move all 4 pawns to the center triangle to win.',
+        seven: 'Predict Below 7, Lucky 7, or Above 7!',
+        tournament: 'Knockout bracket for the Golden Crown!',
+        snakes: 'Climb ladders and reach square 100 first!',
+        event: 'Season 28 festival events are live!',
+        adda: 'Join voice chat rooms with friends.',
+        inventory: 'Theme: Classic Royal • Dice: Classic White',
+        social: 'Send free coins & play with friends.'
+      };
+
+      openCustomModal(titles[type] || 'LUDO KING', `
+        <p class="text-blue-100 text-xs leading-relaxed mb-3.5">${descriptions[type] || 'Welcome to Ludo King!'}</p>
+        <button onclick="closeModal()" class="btn-tactile w-full py-2 rounded-xl bg-gradient-to-b from-[#ffd43b] to-[#e09412] border-2 border-[#fff3a8] claim-text text-base">OKAY</button>
+      `);
+    }
+
+    function openCustomModal(title, htmlContent) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').innerHTML = htmlContent;
+      document.getElementById('gameModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('gameModal').classList.remove('show');
+    }
+
+    function closeModalOnBackdrop(e) {
+      if (e.target.id === 'gameModal') {
+        closeModal();
+      }
+    }
+
+    // Gentle live player count fluctuation
+    setInterval(() => {
+      const onlineEl = document.getElementById('onlineCount');
+      if (onlineEl) {
+        const val = 200998 + Math.floor(Math.random() * 120 - 60);
+        onlineEl.textContent = formatNumber(val);
+      }
+    }, 3500);
+  </script>
+</body>
+</html>
